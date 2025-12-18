@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BW - Bromyard Utility Suite</title>
+    
+    <link rel="icon" type="image/png" href="bw-logo.png">
+    
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        .section-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin: 25px 0 10px; text-align: left; }
+        
+        /* Prominent Header Text */
+        .profile h1 { font-size: 1.6rem; margin-bottom: 4px; }
+        .profile p { 
+            font-size: 1.3rem; 
+            font-weight: 800; 
+            color: #10b981; 
+            text-transform: uppercase; 
+            letter-spacing: 0.15em;
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+            margin-bottom: 10px;
+        }
+
+        /* Collapsible Note Taker */
+        .btn-note-toggle { 
+            background: #1e293b; border: 1px solid #334155; color: #f1f5f9; 
+            font-size: 0.95rem; cursor: pointer; width: 100%; padding: 18px; 
+            border-radius: 12px; font-weight: 600; display: flex; justify-content: center; 
+            align-items: center; gap: 8px; transition: all 0.2s ease; 
+        }
+        .btn-note-toggle:hover { border-color: #10b981; transform: translateY(-2px); background: #243147; }
+
+        .note-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: #1e293b; border-radius: 0 0 12px 12px; margin-top: -5px; }
+        .note-content.open { max-height: 200px; border: 1px solid #10b981; border-top: none; padding: 15px; }
+        #depotNotes { width: 100%; height: 120px; background: #0f172a; color: #f1f5f9; border: 1px solid #334155; border-radius: 8px; padding: 10px; font-family: inherit; font-size: 0.9rem; resize: none; box-sizing: border-box; }
+        .note-status { font-size: 0.65rem; color: #64748b; margin-top: 5px; display: block; text-align: right; }
+
+        /* Scanner & Manual UI - Updated to match Data Processing */
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; display: none; margin-bottom: 15px; border: 1px solid #334155; background: #000; }
+        
+        .btn-scanner { 
+            background: #1e293b; /* Matches Link Cards */
+            border: 1px solid #334155; 
+            color: white; 
+            padding: 18px; 
+            border-radius: 12px; 
+            font-weight: 600; 
+            margin-bottom: 10px; 
+            cursor: pointer; 
+            font-size: 1rem; 
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+        .btn-scanner:hover { border-color: #10b981; transform: translateY(-2px); background: #243147; }
+
+        .manual-entry-wrap { display: none; margin-top: 15px; padding: 15px; background: #1e293b; border-radius: 12px; border: 1px solid #334155; }
+        .manual-input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; margin-bottom: 10px; }
+        .btn-go { background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 6px; width: 100%; font-weight: bold; cursor: pointer; }
+        .toggle-text { font-size: 0.8rem; color: #94a3b8; text-decoration: underline; cursor: pointer; display: block; margin: 10px 0; }
+
+        /* H&S Button Styling */
+        .btn-first-aid { background: #008b45; border-color: #006400; color: white; font-weight: bold; }
+        .btn-first-aid:hover { background: #00a854; border-color: #10b981; }
+        .btn-emergency { background: #000; color: #ef4444; border: 2px solid #ef4444 !important; font-weight: 800; margin-top: 10px; }
+
+        /* w3w style */
+        .w3w-box { background: #e11f26; color: white; padding: 5px 10px; border-radius: 4px; font-family: monospace; font-size: 0.9rem; display: inline-block; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="profile animate">
+            <img src="bw-logo.png" class="avatar" alt="British Wool Logo">
+            <h1>Bromyard Int. Depot</h1>
+            <p>Utility Suite</p>
+        </header>
+
+        <main class="links">
+            <div class="section-title animate" style="animation-delay: 0.1s;">Data Processing</div>
+            <a href="wool-processor/index.html" class="link-card animate" style="animation-delay: 0.15s;">Wool Receipt Processor</a>
+            <a href="bale-extractor/index.html" class="link-card animate" style="animation-delay: 0.2s;">Bale Sheet Extractor</a>
+            <a href="bale-tracker/index.html" class="link-card animate" style="animation-delay: 0.25s;">Bale Tracker App</a>
+
+            <div class="note-wrapper animate" style="animation-delay: 0.3s;">
+                <button class="btn-note-toggle" id="noteToggle"><span>📝</span> Depot Notepad</button>
+                <div class="note-content" id="noteContent">
+                    <textarea id="depotNotes" placeholder="Record reminders here..."></textarea>
+                    <span id="saveStatus" class="note-status">Auto-saved to device</span>
+                </div>
+            </div>
+
+            <div class="section-title animate" style="animation-delay: 0.4s;">Machinery & Assets</div>
+            <button id="scanBtn" class="btn-scanner animate" style="animation-delay: 0.45s;">
+                <span>📷</span> Scan Machine QR Code
+            </button>
+            
+            <div id="reader"></div>
+            <span class="toggle-text animate" style="animation-delay: 0.5s;" onclick="toggleManual()">QR Code not working? Enter Manually</span>
+            
+            <div id="manualEntry" class="manual-entry-wrap">
+                <input type="text" id="machineCode" class="manual-input" placeholder="Enter Machine ID">
+                <button class="btn-go" onclick="manualRedirect()">Open Check Sheet</button>
+            </div>
+
+            <div class="section-title animate" style="animation-delay: 0.55s;">Health & Safety</div>
+            <a href="#" target="_blank" class="link-card btn-first-aid animate" style="animation-delay: 0.6s;">First Aid Kit Log</a>
+            <button class="link-card btn-emergency animate" style="animation-delay: 0.65s; width: 100%; cursor: pointer;" onclick="showEmergencyContacts()">EMERGENCY CONTACTS</button>
+        </main>
+        
+        <footer class="socials animate" style="animation-delay: 0.8s;">
+            <a href="https://www.britishwool.org.uk" target="_blank">Visit British Wool Official Site</a>
+            <div class="version-tag">Build v1.1.0-Bromyard</div>
+        </footer>
+    </div>
+
+    <script>
+        const depotLocation = "///pickup.drop.grabs"; 
+        const depotContacts = [
+            { role: "Depot Manager", name: "Gareth Bowdler", phone: "07929 667272" },
+            { role: "First Aider", name: "Gareth Bowdler", phone: "07929 667272" },
+            { role: "Health & Safety", name: "Colin Jarvis", phone: "01xxx xxx xxx" },
+            { role: "Operations", name: "Billy Hewitson", phone: "02xxx xxx xxx" }
+        ];
+
+        // Notepad Toggle
+        const noteToggle = document.getElementById('noteToggle');
+        const noteContent = document.getElementById('noteContent');
+        const noteArea = document.getElementById('depotNotes');
+        const saveStatus = document.getElementById('saveStatus');
+
+        noteToggle.onclick = () => {
+            noteContent.classList.toggle('open');
+            if(noteContent.classList.contains('open')) {
+                noteArea.focus();
+                noteToggle.style.borderRadius = "12px 12px 0 0";
+                noteToggle.style.borderColor = "#10b981";
+            } else {
+                noteToggle.style.borderRadius = "12px";
+                noteToggle.style.borderColor = "#334155";
+            }
+        };
+
+        noteArea.value = localStorage.getItem('bromyard_notes') || "";
+        noteArea.addEventListener('input', () => {
+            localStorage.setItem('bromyard_notes', noteArea.value);
+            saveStatus.innerText = "Saving...";
+            setTimeout(() => { saveStatus.innerText = "Auto-saved to device"; }, 500);
+        });
+
+        function showEmergencyContacts() {
+            let listHtml = depotContacts.map(c => `
+                <div style="margin-bottom: 12px; border-bottom: 1px solid #334155; padding-bottom: 8px;">
+                    <strong style="color: #10b981; font-size: 0.7rem; text-transform: uppercase;">${c.role}</strong>
+                    <div style="font-size: 1.1rem; font-weight: bold; color: #fff;">${c.name}</div>
+                    <a href="tel:${c.phone.replace(/\s/g, '')}" style="color: #3b82f6; text-decoration: none; font-size: 1.1rem;">${c.phone}</a>
+                </div>
+            `).join('');
+
+            const modal = `
+                <div id="cModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; display:flex; justify-content:center; align-items:center; padding:20px;">
+                    <div style="background:#1e293b; width:100%; max-width:350px; padding:25px; border-radius:16px; border:1px solid #ef4444; text-align:left;">
+                        <h2 style="margin-top:0; color:#ef4444; font-size:1.4rem;">Emergency Contacts</h2>
+                        <div style="margin-bottom: 20px; padding: 10px; background: rgba(225, 31, 38, 0.1); border-radius: 8px;">
+                            <strong style="color: #fff; font-size: 0.7rem; text-transform: uppercase;">Depot what3words:</strong>
+                            <div class="w3w-box">///${depotLocation.replace('///', '')}</div>
+                        </div>
+                        <div style="margin:20px 0;">${listHtml}</div>
+                        <button onclick="document.getElementById('cModal').remove()" style="width:100%; padding:12px; background:#ef4444; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">CLOSE</button>
+                    </div>
+                </div>`;
+            document.body.insertAdjacentHTML('beforeend', modal);
+        }
+
+        const scanBtn = document.getElementById('scanBtn');
+        const readerDiv = document.getElementById('reader');
+        const manualDiv = document.getElementById('manualEntry');
+        const html5QrCode = new Html5Qrcode("reader");
+
+        function toggleManual() { manualDiv.style.display = manualDiv.style.display === 'block' ? 'none' : 'block'; }
+        function manualRedirect() {
+            const id = document.getElementById('machineCode').value.trim().toUpperCase();
+            if (id) {
+                const baseUrl = "https://forms.office.com/Pages/ResponsePage.aspx?id=YOUR_ID";
+                window.location.href = `${baseUrl}&machine_id=${id}`;
+            }
+        }
+
+        scanBtn.onclick = () => {
+            readerDiv.style.display = 'block';
+            scanBtn.innerText = "Camera Active...";
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 },
+                (text) => { if(text.startsWith('http')) { html5QrCode.stop().then(() => window.location.href = text); } }
+            ).catch(err => alert("Camera error: " + err));
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wool Receipt Processor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #10b981; }
+
+        .loader {
+            border-top-color: #10b981;
+            animation: spinner 1.5s linear infinite;
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-[#0f172a] text-slate-200 min-h-screen font-sans">
+
+    <nav class="bg-slate-800 border-b border-slate-700 p-4 sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <i class="fa-solid fa-sheep text-emerald-500"></i> Wool Processor
+            </h1>
+            <a href="../index.html" class="text-slate-400 hover:text-emerald-400 transition-colors text-sm font-medium">
+                ← Back to Hub
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-6 max-w-5xl">
+
+        <div class="glass-card p-6 rounded-xl mb-8">
+            <h2 class="font-bold text-lg mb-3 text-emerald-400">Processing Rules</h2>
+            <div class="grid md:grid-cols-2 gap-6 text-sm text-slate-400">
+                <ul class="list-none space-y-2">
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-500 text-xs"></i> <strong>Tare:</strong> Auto-deducts 1kg per bag</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-500 text-xs"></i> <strong>Logic:</strong> Detects Reg/Clip No. changes</li>
+                </ul>
+                <ul class="list-none space-y-2">
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-500 text-xs"></i> <strong>Format:</strong> CSV (Excel Ready)</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-500 text-xs"></i> <strong>Safety:</strong> Raw bag data only</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="bg-slate-800/50 p-10 rounded-2xl border-2 border-dashed border-slate-700 text-center hover:border-emerald-500/50 hover:bg-slate-800/80 transition-all mb-8 group">
+            <input type="file" id="imageInput" multiple accept="image/*" class="hidden">
+            <label for="imageInput" class="cursor-pointer flex flex-col items-center justify-center">
+                <div class="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-emerald-400"></i>
+                </div>
+                <span class="text-xl font-semibold text-slate-100">Upload Receipt Images</span>
+                <span class="text-sm text-slate-500 mt-2">JPG or PNG (Supports Batch Processing)</span>
+            </label>
+        </div>
+
+        <div id="progressArea" class="hidden glass-card p-5 rounded-xl mb-8">
+            <h3 class="font-bold text-slate-300 mb-3 flex justify-between">
+                <span>OCR Processing</span>
+                <span id="percentText" class="text-emerald-400">0%</span>
+            </h3>
+            <div class="w-full bg-slate-900 rounded-full h-2 mb-2">
+                <div id="progressBar" class="bg-emerald-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <p id="statusText" class="text-xs text-slate-500 italic">Initialising Tesseract engine...</p>
+        </div>
+
+        <div id="resultsArea" class="hidden">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <h2 class="text-2xl font-bold text-white">Extracted Data</h2>
+                <button onclick="downloadCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-lg shadow-lg shadow-emerald-900/20 transition-all font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-file-csv"></i> Download CSV
+                </button>
+            </div>
+            
+            <div class="overflow-hidden rounded-xl border border-slate-700 shadow-2xl">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm text-left">
+                        <thead class="bg-slate-800 text-slate-300 uppercase text-xs tracking-wider">
+                            <tr>
+                                <th class="px-6 py-4 font-bold">Date</th>
+                                <th class="px-6 py-4 font-bold">Reg Name</th>
+                                <th class="px-6 py-4 font-bold">Reg No</th>
+                                <th class="px-6 py-4 font-bold">Clip No</th>
+                                <th class="px-6 py-4 font-bold text-center">Bag</th>
+                                <th class="px-6 py-4 font-bold">Gross (kg)</th>
+                                <th class="px-6 py-4 font-bold">Net (kg)</th>
+                                <th class="px-6 py-4 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody" class="divide-y divide-slate-700 bg-slate-800/30">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+            <p class="text-[10px] text-slate-500 mt-4 uppercase tracking-widest text-center">Handwriting OCR may require manual correction of weights</p>
+        </div>
+
+    </div>
+
+    <script>
+        // Keep your original logic but map to updated IDs if necessary
+        const input = document.getElementById('imageInput');
+        const progressArea = document.getElementById('progressArea');
+        const progressBar = document.getElementById('progressBar');
+        const statusText = document.getElementById('statusText');
+        const resultsArea = document.getElementById('resultsArea');
+        const tableBody = document.getElementById('dataTableBody');
+
+        let processedData = [];
+        let globalBagCounter = 1;
+
+        input.addEventListener('change', handleFiles);
+
+        async function handleFiles(e) {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            progressArea.classList.remove('hidden');
+            resultsArea.classList.add('hidden');
+            tableBody.innerHTML = '';
+            processedData = [];
+            globalBagCounter = 1;
+
+            for (let i = 0; i < files.length; i++) {
+                let progress = Math.round((i / files.length) * 100);
+                updateProgress(progress, `Reading image ${i + 1} of ${files.length}...`);
+                await processSingleImage(files[i]);
+            }
+
+            updateProgress(100, 'All receipts processed successfully!');
+            renderTable();
+            resultsArea.classList.remove('hidden');
+        }
+
+        function updateProgress(percent, text) {
+            progressBar.style.width = `${percent}%`;
+            statusText.innerText = text;
+            document.getElementById('percentText').innerText = `${percent}%`;
+        }
+
+        async function processSingleImage(file) {
+            const worker = await Tesseract.createWorker();
+            await worker.loadLanguage('eng');
+            await worker.initialize('eng');
+            const { data: { text } } = await worker.recognize(file);
+            await worker.terminate();
+            extractDataFromOCR(text);
+        }
+
+        function extractDataFromOCR(text) {
+            let cleanText = text.replace(/\|/g, ' ').replace(/I/g, '1').replace(/l/g, '1');
+            
+            const regNoMatch = cleanText.match(/(?:Reg|No)\.?\s*[:.-]?\s*([A-Z0-9]+)/i);
+            const clipNoMatch = cleanText.match(/(?:Clip)\.?\s*[:.-]?\s*([0-9]+)/i);
+            const nameMatch = cleanText.match(/(?:Name)\.?\s*[:.-]?\s*([A-Z\s]+)/i);
+            const yearMatch = cleanText.match(/(20[2-3][0-9])/);
+
+            const currentHeader = {
+                regName: nameMatch ? nameMatch[1].trim() : "New Producer",
+                regNo: regNoMatch ? regNoMatch[1] : "---",
+                clipNo: clipNoMatch ? clipNoMatch[1] : "1",
+                season: yearMatch ? yearMatch[1] : new Date().getFullYear()
+            };
+
+            const potentialWeights = cleanText.match(/\b\d{2,3}\b/g);
+            if (potentialWeights) {
+                potentialWeights.forEach(weight => {
+                    const gross = parseInt(weight);
+                    if (gross > 40 && gross < 250) {
+                        const tare = 1;
+                        const net = gross - tare;
+                        processedData.push({
+                            date: new Date().toLocaleDateString('en-GB'),
+                            ...currentHeader,
+                            bagNo: globalBagCounter++,
+                            gross: gross,
+                            tare: tare,
+                            net: net
+                        });
+                    }
+                });
+            }
+        }
+
+        function renderTable() {
+            tableBody.innerHTML = '';
+            processedData.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-emerald-500/5 transition-colors border-b border-slate-700/50";
+                tr.innerHTML = `
+                    <td class="px-6 py-4 text-slate-400 text-xs">${row.date}</td>
+                    <td class="px-6 py-4 font-medium" contenteditable="true">${row.regName}</td>
+                    <td class="px-6 py-4 font-mono text-emerald-400" contenteditable="true">${row.regNo}</td>
+                    <td class="px-6 py-4 text-center" contenteditable="true">${row.clipNo}</td>
+                    <td class="px-6 py-4 text-center text-slate-500">${row.bagNo}</td>
+                    <td class="px-6 py-4 font-bold bg-emerald-500/10 text-emerald-100" contenteditable="true" onblur="recalcRow(this, ${index})">${row.gross}</td>
+                    <td class="px-6 py-4 font-bold text-white" id="net-${index}">${row.net}</td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="deleteRow(${index})" class="text-slate-500 hover:text-red-400 transition-colors"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        window.recalcRow = function(element, index) {
+            const newGross = parseInt(element.innerText);
+            if (!isNaN(newGross)) {
+                processedData[index].gross = newGross;
+                processedData[index].net = newGross - processedData[index].tare;
+                document.getElementById(`net-${index}`).innerText = processedData[index].net;
+            }
+        }
+
+        window.deleteRow = function(index) {
+            processedData.splice(index, 1);
+            renderTable();
+        }
+
+        window.downloadCSV = function() {
+            if (processedData.length === 0) return alert("No data to export!");
+            let csvContent = "Date,Producer,RegNo,ClipNo,Season,Bag,Gross,Tare,Net\n";
+            processedData.forEach(row => {
+                csvContent += `${row.date},${row.regName},${row.regNo},${row.clipNo},${row.season},${row.bagNo},${row.gross},${row.tare},${row.net}\n`;
+            });
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Wool_Receipts_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bale Sheet Extractor AI</title>
+    <style>
+        :root {
+            --primary: #10b981; /* Emerald */
+            --primary-dark: #059669;
+            --slate-50: #f8fafc;
+            --slate-800: #1e293b;
+            --slate-900: #0f172a; /* Deep Navy */
+            --border: #334155;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--slate-900);
+            color: #f1f5f9;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--slate-800);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon-box { background: var(--slate-900); padding: 6px; border-radius: 6px; }
+
+        main {
+            flex: 1;
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) { main { grid-template-columns: 1fr 1fr; } }
+
+        .card {
+            background: var(--slate-800);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .drop-zone {
+            border: 2px dashed #475569;
+            border-radius: 8px;
+            padding: 3rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--slate-900);
+        }
+
+        .drop-zone:hover { border-color: var(--primary); background: #132033; }
+
+        button.primary-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .code-block {
+            background: #000; /* Pure dark for code */
+            color: #10b981;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            min-height: 200px;
+        }
+
+        .back-link { color: #94a3b8; text-decoration: none; font-size: 0.9rem; }
+        .back-link:hover { color: var(--primary); }
+
+        /* Animation from our Hub */
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate { animation: slideUp 0.5s ease-out forwards; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1><span class="icon-box">📄</span> Bale Extractor</h1>
+    <a href="../index.html" class="back-link">← Return to Hub</a>
+</header>
+
+<main class="animate">
+    <section>
+        <div class="card">
+            <h2 style="margin-top:0; font-size: 1.2rem;">Upload Sheet</h2>
+            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1.5rem;">
+                Upload a photo of your handwritten Bale Packing Sheet.
+            </p>
+
+            <div class="drop-zone" id="dropZone">
+                <p>Drop file here or tap to upload</p>
+                <small style="color: #64748b;">JPG or PNG only</small>
+                <input type="file" id="fileInput" accept="image/*" style="display:none">
+            </div>
+
+            <div id="previewContainer" style="margin-top: 1rem; display: none; background: var(--slate-900); padding: 10px; border-radius: 8px;">
+                <span id="fileName" style="font-size: 0.8rem;">filename.jpg</span>
+                <button id="clearFile" style="float:right; background:none; border:none; color:#ef4444; cursor:pointer;">Remove</button>
+            </div>
+
+            <button id="processBtn" class="primary-btn" disabled>Extract Data</button>
+        </div>
+    </section>
+
+    <section>
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <h2 style="margin:0; font-size: 1.1rem;">CSV Output</h2>
+                <button id="copyBtn" style="background:var(--slate-900); color:white; border:1px solid var(--border); padding:4px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer; display:none;">Copy CSV</button>
+            </div>
+            <div id="emptyState" style="text-align:center; padding:3rem 0; color:#64748b;">No data yet.</div>
+            <div id="outputArea" style="display:none;"><div class="code-block" id="csvContent"></div></div>
+        </div>
+    </section>
+</main>
+
+<script>
+    // Keeping your logic intact
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const processBtn = document.getElementById('processBtn');
+    const csvContent = document.getElementById('csvContent');
+    const outputArea = document.getElementById('outputArea');
+    const emptyState = document.getElementById('emptyState');
+
+    dropZone.onclick = () => fileInput.click();
+    fileInput.onchange = (e) => {
+        if(e.target.files.length) {
+            document.getElementById('fileName').innerText = e.target.files[0].name;
+            document.getElementById('previewContainer').style.display = 'block';
+            processBtn.disabled = false;
+        }
+    };
+
+    processBtn.onclick = () => {
+        processBtn.innerText = "Extracting...";
+        setTimeout(() => {
+            emptyState.style.display = 'none';
+            outputArea.style.display = 'block';
+            document.getElementById('copyBtn').style.display = 'block';
+            csvContent.innerText = `Date Packed, Bale No, Cluster, Weight\n18.12.25, 465, Single, 180.5\n18.12.25, 466, 2BC, 192.0`;
+            processBtn.innerText = "Extract Data";
+        }, 1500);
+    };
+</script>
+</body>
+</html>
