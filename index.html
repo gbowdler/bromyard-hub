@@ -12,7 +12,7 @@
     <style>
         .section-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin: 25px 0 10px; text-align: left; }
         
-        /* Prominent Header Text */
+        /* Centred Header */
         .profile h1 { font-size: 1.6rem; margin-bottom: 4px; }
         .profile p { 
             font-size: 1.3rem; 
@@ -24,13 +24,7 @@
             margin-bottom: 10px;
         }
 
-        /* Dashboard Stats (Restored for v1.2.1) */
-        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: #1e293b; padding: 15px; border-radius: 12px; border: 1px solid #334155; text-align: center; }
-        .stat-value { display: block; font-size: 1.8rem; font-weight: 800; color: #10b981; }
-        .stat-label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; }
-
-        /* Expanding Note Taker */
+        /* Expanding Note Taker Button */
         .btn-note-toggle { 
             background: #1e293b; border: 1px solid #334155; color: #f1f5f9; 
             font-size: 0.95rem; cursor: pointer; width: 100%; padding: 18px; 
@@ -46,12 +40,11 @@
         .note-status { font-size: 0.65rem; color: #64748b; }
         .btn-share { background: none; border: none; color: #10b981; font-weight: bold; font-size: 0.75rem; cursor: pointer; }
 
-        /* Scanner UI */
+        /* Scanner Styling */
         #reader { width: 100%; border-radius: 12px; overflow: hidden; display: none; margin-bottom: 15px; border: 1px solid #334155; background: #000; }
         .btn-scanner { background: #1e293b; border: 1px solid #334155; color: white; padding: 18px; border-radius: 12px; font-weight: 600; margin-bottom: 10px; cursor: pointer; font-size: 1rem; width: 100%; transition: all 0.2s ease; }
-        .btn-scanner:hover { border-color: #10b981; background: #243147; }
 
-        /* H&S Button Styling */
+        /* H&S and Emergency Buttons */
         .btn-first-aid { background: #008b45; border-color: #006400; color: white; font-weight: bold; }
         .btn-emergency { background: #000; color: #ef4444; border: 2px solid #ef4444 !important; font-weight: 800; margin-top: 10px; }
         .w3w-box { background: #e11f26; color: white; padding: 5px 10px; border-radius: 4px; font-family: monospace; font-size: 0.9rem; display: inline-block; margin-top: 5px; }
@@ -66,17 +59,6 @@
         </header>
 
         <main class="links">
-            <div class="dashboard-grid">
-                <div class="stat-card">
-                    <span class="stat-value" id="baleCount">0</span>
-                    <span class="stat-label">Bales Today</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-value" id="receiptCount">0</span>
-                    <span class="stat-label">Receipts Today</span>
-                </div>
-            </div>
-
             <div class="section-title">Data Processing</div>
             <a href="wool-processor/index.html" class="link-card">Wool Intake Receipt Processor</a>
             <a href="bale-extractor/index.html" class="link-card">Bale Packing Sheet Extractor</a>
@@ -116,7 +98,7 @@
         const depotContacts = [
             { role: "Depot Manager", name: "Gareth Bowdler", phone: "07929 667272" },
             { role: "First Aider", name: "Gareth Bowdler", phone: "07929 667272" },
-            { role: "Health & Safety", name: "Colin Jarvis", phone: "01xxx xxx xxx" }
+            { role: "Operations", name: "Billy Hewitson", phone: "07xxx xxxxxx" }
         ];
 
         // Notepad Logic
@@ -148,12 +130,7 @@
             }
         }
 
-        // Stats Loader
-        window.onload = () => {
-            document.getElementById('baleCount').innerText = localStorage.getItem('dailyBales') || 0;
-            document.getElementById('receiptCount').innerText = localStorage.getItem('dailyReceipts') || 0;
-        };
-
+        // Emergency Contacts Logic
         function showEmergencyContacts() {
             let listHtml = depotContacts.map(c => `
                 <div style="margin-bottom: 12px; border-bottom: 1px solid #334155; padding-bottom: 8px;">
