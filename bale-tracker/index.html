@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bale Tracker</title>
+    <title>BW - Bale Tracker</title>
     <style>
         :root {
             --primary-color: #10b981; /* Emerald */
@@ -24,21 +24,30 @@
             overscroll-behavior-y: none; 
         }
 
+        /* Standardised Hub Header */
         header {
-            background-color: var(--card-bg);
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            padding: 20px;
+            text-align: center;
+            position: relative;
         }
 
-        h1 { font-size: 1.25rem; margin: 0; color: var(--primary-color); }
-        h2 { font-size: 1.1rem; margin-top: 0; color: #fff; }
+        header h1 { font-size: 1.6rem; margin: 0; color: white; }
+        header p { 
+            font-size: 1.1rem; font-weight: 800; color: var(--primary-color); 
+            text-transform: uppercase; letter-spacing: 0.15em; margin: 5px 0 0 0;
+        }
+
+        .back-link { 
+            position: fixed; top: 15px; right: 15px; 
+            background: var(--card-bg); color: var(--primary-color); 
+            padding: 8px 12px; border-radius: 8px; font-size: 0.75rem; 
+            font-weight: bold; text-decoration: none; border: 1px solid var(--border-color); 
+            z-index: 1000;
+        }
 
         .container {
             max-width: 600px;
-            margin: 20px auto;
+            margin: 0 auto 40px;
             background-color: var(--card-bg);
             padding: 25px;
             border-radius: 16px;
@@ -48,8 +57,7 @@
 
         .hidden { display: none !important; }
 
-        /* Form Elements */
-        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; color: #94a3b8; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
 
         input, select {
             width: 100%; padding: 12px; margin-bottom: 15px;
@@ -69,7 +77,6 @@
         .btn-secondary { background-color: #334155; color: white; }
         .btn-danger { background-color: var(--danger-color); color: white; }
 
-        /* Status Bar */
         .status-bar {
             background-color: #0f172a; padding: 15px; border-radius: 8px;
             margin-bottom: 20px; text-align: center; font-weight: bold;
@@ -78,7 +85,6 @@
         .status-warning { background-color: #eab308; color: black; }
         .status-danger { background-color: var(--danger-color); color: white; }
 
-        /* List Items */
         #manifestList { list-style: none; padding: 0; margin-top: 20px; }
         #manifestList li {
             background-color: #0f172a; border-bottom: 1px solid var(--border-color);
@@ -98,7 +104,6 @@
         .input-group { display: flex; gap: 10px; }
         .input-group > div { flex: 1; }
 
-        /* Modal Overlay */
         #customModalOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.8); z-index: 9999;
@@ -108,8 +113,6 @@
             background: var(--card-bg); padding: 25px; border-radius: 12px;
             width: 85%; max-width: 300px; text-align: center; border: 1px solid var(--border-color);
         }
-        .back-link { color: #64748b; text-decoration: none; font-size: 0.9rem; }
-        .back-link:hover { color: var(--primary-color); }
     </style>
 </head>
 <body>
@@ -125,14 +128,15 @@
     </div>
 
     <header>
+        <a href="../index.html" class="back-link">← HUB</a>
         <h1>Bale Tracker</h1>
-        <a href="../index.html" class="back-link">← Return to Hub</a>
+        <p>Bromyard Depot</p>
     </header>
 
     <div class="container">
         
         <div id="haulierSection">
-            <h2>Transport Haulier</h2>
+            <h2 style="font-size: 1.1rem; margin-top: 0; color: #fff;">Transport Haulier</h2>
             <label>Who is transporting?</label>
             <select id="haulierSelect" onchange="checkOtherHaulier()">
                 <option value="Nigel|17">Nigel (Max 17)</option>
@@ -149,7 +153,6 @@
 
             <button type="button" class="btn-primary" onclick="startLoading()">Start Loading</button>
         </div>
-
 
         <div id="entrySection" class="hidden">
             <div id="statusBar" class="status-bar">Loading: 0 / 0</div>
@@ -189,11 +192,9 @@
             <button type="button" class="btn-secondary" onclick="copyManifest()">Copy to Clipboard</button>
             <button type="button" class="btn-danger" style="margin-top: 20px; opacity: 0.6;" onclick="requestReset()">New Load</button>
         </div>
-
     </div>
 
     <script>
-        // --- Logic remains the same as your original file, only styled for Dark Mode ---
         let haulierName = ""; let maxLimit = 0; let currentCount = 0; let manifestData = []; 
 
         function showModal(message, confirmCallback) {
