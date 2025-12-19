@@ -10,46 +10,46 @@
     <link rel="apple-touch-icon" href="bw-logo.png">
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        /* Reduced global padding to push content up */
-        .container { padding: 10px 20px; }
+        /* Tightened container to push content up */
+        .container { padding: 5px 20px; }
         
-        .section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin: 15px 0 8px; text-align: left; }
+        .section-title { font-size: 0.7rem; text-transform: uppercase; color: #64748b; margin: 12px 0 6px; text-align: left; }
         
-        /* Smaller Header for more screen space */
-        .profile { margin-bottom: 10px; }
-        .profile img { width: 55px; margin-bottom: 5px; }
-        .profile h1 { font-size: 1.4rem; margin-bottom: 2px; }
+        /* Ultra-compact header */
+        .profile { margin-bottom: 8px; }
+        .profile img { width: 50px; margin-bottom: 4px; }
+        .profile h1 { font-size: 1.3rem; margin-bottom: 0px; }
         .profile p { 
-            font-size: 1.1rem; 
+            font-size: 1.05rem; 
             font-weight: 800; 
             color: #10b981; 
             text-transform: uppercase; 
-            letter-spacing: 0.12em;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
 
-        /* Compact Link Cards */
-        .link-card { padding: 14px; margin-bottom: 8px; font-size: 0.95rem; }
+        .link-card { padding: 12px; margin-bottom: 6px; font-size: 0.9rem; }
 
-        /* Compact Expanding Notepad */
+        /* Fixed Expanding Notepad */
         .btn-note-toggle { 
             background: #1e293b; border: 1px solid #334155; color: #f1f5f9; 
-            font-size: 0.9rem; cursor: pointer; width: 100%; padding: 14px; 
+            font-size: 0.9rem; cursor: pointer; width: 100%; padding: 12px; 
             border-radius: 10px; font-weight: 600; display: flex; justify-content: space-between; 
-            align-items: center; transition: 0.2s; 
+            align-items: center; 
         }
 
-        .note-content.open { max-height: 200px; padding: 12px; }
-        #depotNotes { height: 100px; font-size: 0.85rem; }
+        .note-content { 
+            display: none; /* Changed from max-height to display for a cleaner hide */
+            background: #1e293b; border: 1px solid #10b981; border-top: none;
+            border-radius: 0 0 12px 12px; padding: 12px; margin-top: -2px;
+        }
+        .note-content.open { display: block; }
+        #depotNotes { width: 100%; height: 90px; background: #0f172a; color: #f1f5f9; border: 1px solid #334155; border-radius: 8px; padding: 8px; font-size: 0.85rem; resize: none; box-sizing: border-box; }
 
-        /* Machinery Scanner Button */
-        #reader { width: 100%; border-radius: 12px; overflow: hidden; display: none; margin-bottom: 10px; border: 1px solid #334155; background: #000; }
-        .btn-scanner { background: #1e293b; border: 1px solid #334155; color: white; padding: 14px; border-radius: 10px; font-weight: 600; margin-bottom: 8px; cursor: pointer; font-size: 0.95rem; width: 100%; }
+        .btn-scanner { background: #1e293b; border: 1px solid #334155; color: white; padding: 12px; border-radius: 10px; font-weight: 600; margin-bottom: 6px; cursor: pointer; font-size: 0.9rem; width: 100%; }
 
-        /* H&S and Emergency Buttons */
-        .btn-first-aid { background: #008b45; border-color: #006400; color: white; font-weight: bold; }
-        .btn-emergency { background: #000; color: #ef4444; border: 2px solid #ef4444 !important; font-weight: 800; margin-top: 5px; }
-        .w3w-box { background: #e11f26; color: white; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 0.85rem; display: inline-block; margin-top: 5px; }
+        .btn-first-aid { background: #008b45; color: white; font-weight: bold; }
+        .btn-emergency { background: #000; color: #ef4444; border: 2px solid #ef4444 !important; font-weight: 800; margin-top: 4px; padding: 12px; }
+        .w3w-box { background: #e11f26; color: white; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 0.8rem; display: inline-block; margin-top: 4px; }
     </style>
 </head>
 <body>
@@ -66,15 +66,15 @@
             <a href="bale-extractor/index.html" class="link-card">Bale Packing Sheet Extractor</a>
             <a href="bale-tracker/index.html" class="link-card">Bale Transportation Tracker</a>
 
-            <div class="note-wrapper" style="margin-top: 10px;">
+            <div class="note-wrapper" style="margin-top: 8px;">
                 <button class="btn-note-toggle" id="noteToggle">
                     <span>📝 Depot Notepad</span>
                     <span id="toggleIcon">▼</span>
                 </button>
                 <div class="note-content" id="noteContent">
                     <textarea id="depotNotes" placeholder="Record shift notes here..."></textarea>
-                    <div class="note-footer" style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
-                        <span id="saveStatus" style="font-size:0.6rem; color:#64748b;">Auto-saved to device</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
+                        <span id="saveStatus" style="font-size:0.6rem; color:#64748b;">Saved to device</span>
                         <button onclick="shareNote()" style="background:none; border:none; color:#10b981; font-weight:bold; font-size:0.7rem; cursor:pointer;">📤 SHARE</button>
                     </div>
                 </div>
@@ -89,9 +89,9 @@
             <button class="link-card btn-emergency" style="width: 100%; cursor: pointer;" onclick="showEmergencyContacts()">EMERGENCY CONTACTS</button>
         </main>
         
-        <footer class="socials" style="margin-top:15px;">
-            <a href="print-qr.html" style="color: #10b981; font-size: 0.75rem; text-decoration: none;">Print QR Poster</a>
-            <div class="version-tag" style="font-size: 0.6rem; color: #475569; margin-top: 5px;">Build v1.2.1-Bromyard</div>
+        <footer class="socials" style="margin-top:10px;">
+            <a href="print-qr.html" style="color: #10b981; font-size: 0.7rem; text-decoration: none;">Print QR Poster</a>
+            <div class="version-tag" style="font-size: 0.6rem; color: #475569; margin-top: 2px;">Build v1.2.2-Bromyard</div>
         </footer>
     </div>
 
@@ -99,19 +99,20 @@
         const depotLocation = "///intent.reeling.mops"; 
         const depotContacts = [
             { role: "Depot Manager", name: "Gareth Bowdler", phone: "07929 667272" },
-            { role: "First Aider", name: "Gareth Bowdler", phone: "07929 667272" },
-            { role: "Operations", name: "Billy Hewitson", phone: "07xxx xxxxxx" }
+            { role: "First Aider", name: "Gareth Bowdler", phone: "07929 667272" }
         ];
 
-        // Notepad Logic
         const noteToggle = document.getElementById('noteToggle');
         const noteContent = document.getElementById('noteContent');
         const noteArea = document.getElementById('depotNotes');
         const saveStatus = document.getElementById('saveStatus');
 
+        // Fixed Toggle Logic
         noteToggle.onclick = () => {
             const isOpen = noteContent.classList.toggle('open');
             document.getElementById('toggleIcon').innerText = isOpen ? '▲' : '▼';
+            // Round the top button corners when open
+            noteToggle.style.borderRadius = isOpen ? "10px 10px 0 0" : "10px";
             if(isOpen) noteArea.focus();
         };
 
@@ -119,7 +120,7 @@
         noteArea.addEventListener('input', () => {
             localStorage.setItem('bromyard_notes', noteArea.value);
             saveStatus.innerText = "Saving...";
-            setTimeout(() => { saveStatus.innerText = "Auto-saved to device"; }, 500);
+            setTimeout(() => { saveStatus.innerText = "Saved to device"; }, 500);
         });
 
         async function shareNote() {
@@ -128,25 +129,24 @@
                 try { await navigator.share({ title: 'Bromyard Depot Note', text: noteArea.value }); } catch (e) {}
             } else {
                 navigator.clipboard.writeText(noteArea.value);
-                alert("Note copied to clipboard!");
+                alert("Note copied!");
             }
         }
 
-        // Emergency Contacts Logic
         function showEmergencyContacts() {
             let listHtml = depotContacts.map(c => `
                 <div style="margin-bottom: 10px; border-bottom: 1px solid #334155; padding-bottom: 6px;">
-                    <strong style="color: #10b981; font-size: 0.65rem; text-transform: uppercase;">${c.role}</strong>
+                    <strong style="color: #10b981; font-size: 0.65rem;">${c.role}</strong>
                     <div style="font-size: 1rem; font-weight: bold; color: #fff;">${c.name}</div>
                     <a href="tel:${c.phone.replace(/\s/g, '')}" style="color: #3b82f6; text-decoration: none; font-size: 1rem;">${c.phone}</a>
                 </div>`).join('');
 
             const modal = `
                 <div id="cModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; display:flex; justify-content:center; align-items:center; padding:15px;">
-                    <div style="background:#1e293b; width:100%; max-width:320px; padding:20px; border-radius:16px; border:1px solid #ef4444;">
+                    <div style="background:#1e293b; width:100%; max-width:300px; padding:20px; border-radius:16px; border:1px solid #ef4444;">
                         <h2 style="margin-top:0; color:#ef4444; font-size:1.2rem;">Emergency Details</h2>
                         <div style="margin-bottom: 15px; padding: 8px; background: rgba(225, 31, 38, 0.1); border-radius: 8px;">
-                            <strong style="color: #fff; font-size: 0.65rem; text-transform: uppercase;">Location w3w:</strong><br>
+                            <strong style="color: #fff; font-size: 0.65rem;">Location w3w:</strong><br>
                             <div class="w3w-box">${depotLocation}</div>
                         </div>
                         ${listHtml}
