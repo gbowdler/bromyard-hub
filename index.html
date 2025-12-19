@@ -10,44 +10,46 @@
     <link rel="apple-touch-icon" href="bw-logo.png">
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        .section-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin: 25px 0 10px; text-align: left; }
+        /* Reduced global padding to push content up */
+        .container { padding: 10px 20px; }
         
-        /* Centred Header */
-        .profile h1 { font-size: 1.6rem; margin-bottom: 4px; }
+        .section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin: 15px 0 8px; text-align: left; }
+        
+        /* Smaller Header for more screen space */
+        .profile { margin-bottom: 10px; }
+        .profile img { width: 55px; margin-bottom: 5px; }
+        .profile h1 { font-size: 1.4rem; margin-bottom: 2px; }
         .profile p { 
-            font-size: 1.3rem; 
+            font-size: 1.1rem; 
             font-weight: 800; 
             color: #10b981; 
             text-transform: uppercase; 
-            letter-spacing: 0.15em;
-            text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
-            margin-bottom: 10px;
+            letter-spacing: 0.12em;
+            margin-bottom: 5px;
         }
 
-        /* Expanding Note Taker Button */
+        /* Compact Link Cards */
+        .link-card { padding: 14px; margin-bottom: 8px; font-size: 0.95rem; }
+
+        /* Compact Expanding Notepad */
         .btn-note-toggle { 
             background: #1e293b; border: 1px solid #334155; color: #f1f5f9; 
-            font-size: 0.95rem; cursor: pointer; width: 100%; padding: 18px; 
-            border-radius: 12px; font-weight: 600; display: flex; justify-content: space-between; 
-            align-items: center; transition: all 0.2s ease; 
+            font-size: 0.9rem; cursor: pointer; width: 100%; padding: 14px; 
+            border-radius: 10px; font-weight: 600; display: flex; justify-content: space-between; 
+            align-items: center; transition: 0.2s; 
         }
-        .btn-note-toggle:hover { border-color: #10b981; background: #243147; }
 
-        .note-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: #1e293b; border-radius: 0 0 12px 12px; margin-top: -5px; }
-        .note-content.open { max-height: 250px; border: 1px solid #10b981; border-top: none; padding: 15px; }
-        #depotNotes { width: 100%; height: 120px; background: #0f172a; color: #f1f5f9; border: 1px solid #334155; border-radius: 8px; padding: 10px; font-family: inherit; font-size: 0.9rem; resize: none; box-sizing: border-box; }
-        .note-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
-        .note-status { font-size: 0.65rem; color: #64748b; }
-        .btn-share { background: none; border: none; color: #10b981; font-weight: bold; font-size: 0.75rem; cursor: pointer; }
+        .note-content.open { max-height: 200px; padding: 12px; }
+        #depotNotes { height: 100px; font-size: 0.85rem; }
 
-        /* Scanner Styling */
-        #reader { width: 100%; border-radius: 12px; overflow: hidden; display: none; margin-bottom: 15px; border: 1px solid #334155; background: #000; }
-        .btn-scanner { background: #1e293b; border: 1px solid #334155; color: white; padding: 18px; border-radius: 12px; font-weight: 600; margin-bottom: 10px; cursor: pointer; font-size: 1rem; width: 100%; transition: all 0.2s ease; }
+        /* Machinery Scanner Button */
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; display: none; margin-bottom: 10px; border: 1px solid #334155; background: #000; }
+        .btn-scanner { background: #1e293b; border: 1px solid #334155; color: white; padding: 14px; border-radius: 10px; font-weight: 600; margin-bottom: 8px; cursor: pointer; font-size: 0.95rem; width: 100%; }
 
         /* H&S and Emergency Buttons */
         .btn-first-aid { background: #008b45; border-color: #006400; color: white; font-weight: bold; }
-        .btn-emergency { background: #000; color: #ef4444; border: 2px solid #ef4444 !important; font-weight: 800; margin-top: 10px; }
-        .w3w-box { background: #e11f26; color: white; padding: 5px 10px; border-radius: 4px; font-family: monospace; font-size: 0.9rem; display: inline-block; margin-top: 5px; }
+        .btn-emergency { background: #000; color: #ef4444; border: 2px solid #ef4444 !important; font-weight: 800; margin-top: 5px; }
+        .w3w-box { background: #e11f26; color: white; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 0.85rem; display: inline-block; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -64,16 +66,16 @@
             <a href="bale-extractor/index.html" class="link-card">Bale Packing Sheet Extractor</a>
             <a href="bale-tracker/index.html" class="link-card">Bale Transportation Tracker</a>
 
-            <div class="note-wrapper" style="margin-top: 15px;">
+            <div class="note-wrapper" style="margin-top: 10px;">
                 <button class="btn-note-toggle" id="noteToggle">
                     <span>📝 Depot Notepad</span>
                     <span id="toggleIcon">▼</span>
                 </button>
                 <div class="note-content" id="noteContent">
                     <textarea id="depotNotes" placeholder="Record shift notes here..."></textarea>
-                    <div class="note-footer">
-                        <span id="saveStatus" class="note-status">Auto-saved to device</span>
-                        <button onclick="shareNote()" class="btn-share">📤 SHARE NOTE</button>
+                    <div class="note-footer" style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
+                        <span id="saveStatus" style="font-size:0.6rem; color:#64748b;">Auto-saved to device</span>
+                        <button onclick="shareNote()" style="background:none; border:none; color:#10b981; font-weight:bold; font-size:0.7rem; cursor:pointer;">📤 SHARE</button>
                     </div>
                 </div>
             </div>
@@ -87,9 +89,9 @@
             <button class="link-card btn-emergency" style="width: 100%; cursor: pointer;" onclick="showEmergencyContacts()">EMERGENCY CONTACTS</button>
         </main>
         
-        <footer class="socials">
-            <a href="print-qr.html" style="color: #10b981; font-size: 0.8rem; text-decoration: none;">Print QR Poster</a>
-            <div class="version-tag">Build v1.2.1-Bromyard</div>
+        <footer class="socials" style="margin-top:15px;">
+            <a href="print-qr.html" style="color: #10b981; font-size: 0.75rem; text-decoration: none;">Print QR Poster</a>
+            <div class="version-tag" style="font-size: 0.6rem; color: #475569; margin-top: 5px;">Build v1.2.1-Bromyard</div>
         </footer>
     </div>
 
@@ -133,22 +135,22 @@
         // Emergency Contacts Logic
         function showEmergencyContacts() {
             let listHtml = depotContacts.map(c => `
-                <div style="margin-bottom: 12px; border-bottom: 1px solid #334155; padding-bottom: 8px;">
-                    <strong style="color: #10b981; font-size: 0.7rem; text-transform: uppercase;">${c.role}</strong>
-                    <div style="font-size: 1.1rem; font-weight: bold; color: #fff;">${c.name}</div>
-                    <a href="tel:${c.phone.replace(/\s/g, '')}" style="color: #3b82f6; text-decoration: none; font-size: 1.1rem;">${c.phone}</a>
+                <div style="margin-bottom: 10px; border-bottom: 1px solid #334155; padding-bottom: 6px;">
+                    <strong style="color: #10b981; font-size: 0.65rem; text-transform: uppercase;">${c.role}</strong>
+                    <div style="font-size: 1rem; font-weight: bold; color: #fff;">${c.name}</div>
+                    <a href="tel:${c.phone.replace(/\s/g, '')}" style="color: #3b82f6; text-decoration: none; font-size: 1rem;">${c.phone}</a>
                 </div>`).join('');
 
             const modal = `
-                <div id="cModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; display:flex; justify-content:center; align-items:center; padding:20px;">
-                    <div style="background:#1e293b; width:100%; max-width:350px; padding:25px; border-radius:16px; border:1px solid #ef4444;">
-                        <h2 style="margin-top:0; color:#ef4444; font-size:1.4rem;">Emergency Details</h2>
-                        <div style="margin-bottom: 20px; padding: 10px; background: rgba(225, 31, 38, 0.1); border-radius: 8px;">
-                            <strong style="color: #fff; font-size: 0.7rem; text-transform: uppercase;">Location w3w:</strong><br>
+                <div id="cModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; display:flex; justify-content:center; align-items:center; padding:15px;">
+                    <div style="background:#1e293b; width:100%; max-width:320px; padding:20px; border-radius:16px; border:1px solid #ef4444;">
+                        <h2 style="margin-top:0; color:#ef4444; font-size:1.2rem;">Emergency Details</h2>
+                        <div style="margin-bottom: 15px; padding: 8px; background: rgba(225, 31, 38, 0.1); border-radius: 8px;">
+                            <strong style="color: #fff; font-size: 0.65rem; text-transform: uppercase;">Location w3w:</strong><br>
                             <div class="w3w-box">${depotLocation}</div>
                         </div>
                         ${listHtml}
-                        <button onclick="document.getElementById('cModal').remove()" style="width:100%; padding:12px; background:#ef4444; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">CLOSE</button>
+                        <button onclick="document.getElementById('cModal').remove()" style="width:100%; padding:10px; background:#ef4444; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:5px;">CLOSE</button>
                     </div>
                 </div>`;
             document.body.insertAdjacentHTML('beforeend', modal);
