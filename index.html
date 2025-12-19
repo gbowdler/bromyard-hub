@@ -3,171 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>British Wool - Bromyard Hub</title>
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <title>BW - Bromyard Utility Suite</title>
+    
+    <link rel="icon" type="image/png" href="bw-logo.png">
     <link rel="stylesheet" href="style.css">
+    <link rel="apple-touch-icon" href="bw-logo.png">
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        /* Dashboard Stats Styling */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        .stat-card {
-            background: #1e293b;
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid #334155;
-            text-align: center;
-        }
-        .stat-value {
-            display: block;
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: #10b981;
-        }
-        .stat-label {
-            font-size: 0.7rem;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+        .section-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin: 25px 0 10px; text-align: left; }
+        
+        /* Prominent Header Text */
+        .profile h1 { font-size: 1.6rem; margin-bottom: 4px; }
+        .profile p { 
+            font-size: 1.3rem; 
+            font-weight: 800; 
+            color: #10b981; 
+            text-transform: uppercase; 
+            letter-spacing: 0.15em;
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+            margin-bottom: 10px;
         }
 
-        /* Tool Grid Styling */
-        .tool-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        .tool-button {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 16px;
-            padding: 20px 10px;
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            transition: 0.2s;
-        }
-        .tool-button:active { transform: scale(0.95); background: #243147; }
-        .tool-icon { font-size: 1.8rem; margin-bottom: 8px; }
-        .tool-name { color: white; font-weight: bold; font-size: 0.85rem; text-align: center; }
+        /* Dashboard Stats (Restored for v1.2.1) */
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: #1e293b; padding: 15px; border-radius: 12px; border: 1px solid #334155; text-align: center; }
+        .stat-value { display: block; font-size: 1.8rem; font-weight: 800; color: #10b981; }
+        .stat-label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; }
 
-        /* Notepad Styling */
-        .notepad-area {
-            background: #1e293b;
-            border-radius: 16px;
-            padding: 20px;
-            border: 1px solid #334155;
-            margin-bottom: 40px;
+        /* Expanding Note Taker */
+        .btn-note-toggle { 
+            background: #1e293b; border: 1px solid #334155; color: #f1f5f9; 
+            font-size: 0.95rem; cursor: pointer; width: 100%; padding: 18px; 
+            border-radius: 12px; font-weight: 600; display: flex; justify-content: space-between; 
+            align-items: center; transition: all 0.2s ease; 
         }
-        textarea {
-            width: 100%;
-            height: 120px;
-            background: #0f172a;
-            color: white;
-            border: 1px solid #334155;
-            border-radius: 8px;
-            padding: 12px;
-            box-sizing: border-box;
-            font-family: inherit;
-            font-size: 1rem;
-            margin-top: 10px;
-            resize: none;
-        }
+        .btn-note-toggle:hover { border-color: #10b981; background: #243147; }
+
+        .note-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: #1e293b; border-radius: 0 0 12px 12px; margin-top: -5px; }
+        .note-content.open { max-height: 250px; border: 1px solid #10b981; border-top: none; padding: 15px; }
+        #depotNotes { width: 100%; height: 120px; background: #0f172a; color: #f1f5f9; border: 1px solid #334155; border-radius: 8px; padding: 10px; font-family: inherit; font-size: 0.9rem; resize: none; box-sizing: border-box; }
+        .note-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+        .note-status { font-size: 0.65rem; color: #64748b; }
+        .btn-share { background: none; border: none; color: #10b981; font-weight: bold; font-size: 0.75rem; cursor: pointer; }
+
+        /* Scanner UI */
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; display: none; margin-bottom: 15px; border: 1px solid #334155; background: #000; }
+        .btn-scanner { background: #1e293b; border: 1px solid #334155; color: white; padding: 18px; border-radius: 12px; font-weight: 600; margin-bottom: 10px; cursor: pointer; font-size: 1rem; width: 100%; transition: all 0.2s ease; }
+        .btn-scanner:hover { border-color: #10b981; background: #243147; }
+
+        /* H&S Button Styling */
+        .btn-first-aid { background: #008b45; border-color: #006400; color: white; font-weight: bold; }
+        .btn-emergency { background: #000; color: #ef4444; border: 2px solid #ef4444 !important; font-weight: 800; margin-top: 10px; }
+        .w3w-box { background: #e11f26; color: white; padding: 5px 10px; border-radius: 4px; font-family: monospace; font-size: 0.9rem; display: inline-block; margin-top: 5px; }
     </style>
 </head>
 <body>
-
     <div class="container">
         <header class="profile">
-            <img src="bw-logo.png" alt="British Wool Logo" style="width: 80px; margin-bottom: 10px;">
-            <h1>Bromyard Hub</h1>
-            <p>Digital Utility Suite</p>
+            <img src="bw-logo.png" class="avatar" alt="British Wool Logo">
+            <h1>Bromyard Depot</h1>
+            <p>Utility Suite</p>
         </header>
 
-        <div class="dashboard-grid">
-            <div class="stat-card">
-                <span class="stat-value" id="baleCount">0</span>
-                <span class="stat-label">Bales Today</span>
+        <main class="links">
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <span class="stat-value" id="baleCount">0</span>
+                    <span class="stat-label">Bales Today</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="receiptCount">0</span>
+                    <span class="stat-label">Receipts Today</span>
+                </div>
             </div>
-            <div class="stat-card">
-                <span class="stat-value" id="receiptCount">0</span>
-                <span class="stat-label">Receipts Today</span>
+
+            <div class="section-title">Data Processing</div>
+            <a href="wool-processor/index.html" class="link-card">Wool Intake Receipt Processor</a>
+            <a href="bale-extractor/index.html" class="link-card">Bale Packing Sheet Extractor</a>
+            <a href="bale-tracker/index.html" class="link-card">Bale Transportation Tracker</a>
+
+            <div class="note-wrapper" style="margin-top: 15px;">
+                <button class="btn-note-toggle" id="noteToggle">
+                    <span>📝 Depot Notepad</span>
+                    <span id="toggleIcon">▼</span>
+                </button>
+                <div class="note-content" id="noteContent">
+                    <textarea id="depotNotes" placeholder="Record shift notes here..."></textarea>
+                    <div class="note-footer">
+                        <span id="saveStatus" class="note-status">Auto-saved to device</span>
+                        <button onclick="shareNote()" class="btn-share">📤 SHARE NOTE</button>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <div class="tool-grid">
-            <a href="bale-tracker/index.html" class="tool-button">
-                <span class="tool-icon">📦</span>
-                <span class="tool-name">Bale Tracker</span>
-            </a>
-            <a href="bale-extractor/index.html" class="tool-button">
-                <span class="tool-icon">🤖</span>
-                <span class="tool-name">AI Multi-Scanner</span>
-            </a>
-            <a href="wool-processor/index.html" class="tool-button">
-                <span class="tool-icon">🧾</span>
-                <span class="tool-name">Receipt Processor</span>
-            </a>
-            <a href="https://what3words.com/intent.reeling.mops" target="_blank" class="tool-button">
-                <span class="tool-icon">📍</span>
-                <span class="tool-name">Depot Location</span>
-            </a>
-        </div>
+            <div class="section-title">Machinery & Assets</div>
+            <button id="scanBtn" class="btn-scanner"><span>📷</span> Scan Machine QR Code</button>
+            <div id="reader"></div>
 
-        <div class="notepad-area">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <label style="font-size: 0.75rem; font-weight: bold; color: #64748b; text-transform: uppercase;">Depot Notepad</label>
-                <button onclick="shareNote()" style="background: none; border: none; color: #10b981; font-weight: bold; font-size: 0.75rem; cursor: pointer;">📤 SHARE</button>
-            </div>
-            <textarea id="depotNote" placeholder="Type shift reminders or bale issues..."></textarea>
-            <p id="saveStatus" style="font-size: 0.65rem; color: #64748b; margin-top: 8px; font-style: italic;">Auto-saved to device</p>
-        </div>
-
-        <footer style="text-align: center; padding-bottom: 20px;">
-            <p style="font-size: 0.7rem; color: #475569;">
-                Build v1.2.0-Bromyard • <a href="print-qr.html" style="color: #10b981; text-decoration: none;">Print QR Poster</a>
-            </p>
+            <div class="section-title">Health & Safety</div>
+            <a href="#" class="link-card btn-first-aid">First Aid Kit Log</a>
+            <button class="link-card btn-emergency" style="width: 100%; cursor: pointer;" onclick="showEmergencyContacts()">EMERGENCY CONTACTS</button>
+        </main>
+        
+        <footer class="socials">
+            <a href="print-qr.html" style="color: #10b981; font-size: 0.8rem; text-decoration: none;">Print QR Poster</a>
+            <div class="version-tag">Build v1.2.1-Bromyard</div>
         </footer>
     </div>
 
     <script>
-        const notepad = document.getElementById('depotNote');
-        const status = document.getElementById('saveStatus');
+        const depotLocation = "///intent.reeling.mops"; 
+        const depotContacts = [
+            { role: "Depot Manager", name: "Gareth Bowdler", phone: "07929 667272" },
+            { role: "First Aider", name: "Gareth Bowdler", phone: "07929 667272" },
+            { role: "Health & Safety", name: "Colin Jarvis", phone: "01xxx xxx xxx" }
+        ];
 
-        // Load data on startup
+        // Notepad Logic
+        const noteToggle = document.getElementById('noteToggle');
+        const noteContent = document.getElementById('noteContent');
+        const noteArea = document.getElementById('depotNotes');
+        const saveStatus = document.getElementById('saveStatus');
+
+        noteToggle.onclick = () => {
+            const isOpen = noteContent.classList.toggle('open');
+            document.getElementById('toggleIcon').innerText = isOpen ? '▲' : '▼';
+            if(isOpen) noteArea.focus();
+        };
+
+        noteArea.value = localStorage.getItem('bromyard_notes') || "";
+        noteArea.addEventListener('input', () => {
+            localStorage.setItem('bromyard_notes', noteArea.value);
+            saveStatus.innerText = "Saving...";
+            setTimeout(() => { saveStatus.innerText = "Auto-saved to device"; }, 500);
+        });
+
+        async function shareNote() {
+            if (!noteArea.value) return alert("Note is empty!");
+            if (navigator.share) {
+                try { await navigator.share({ title: 'Bromyard Depot Note', text: noteArea.value }); } catch (e) {}
+            } else {
+                navigator.clipboard.writeText(noteArea.value);
+                alert("Note copied to clipboard!");
+            }
+        }
+
+        // Stats Loader
         window.onload = () => {
-            // Load Note
-            const savedNote = localStorage.getItem('bromyard_note');
-            if (savedNote) notepad.value = savedNote;
-
-            // Load Stats
             document.getElementById('baleCount').innerText = localStorage.getItem('dailyBales') || 0;
             document.getElementById('receiptCount').innerText = localStorage.getItem('dailyReceipts') || 0;
         };
 
-        // Auto-save logic
-        notepad.addEventListener('input', () => {
-            localStorage.setItem('bromyard_note', notepad.value);
-            status.innerText = "Saving...";
-            setTimeout(() => { status.innerText = "Auto-saved to device"; }, 800);
-        });
+        function showEmergencyContacts() {
+            let listHtml = depotContacts.map(c => `
+                <div style="margin-bottom: 12px; border-bottom: 1px solid #334155; padding-bottom: 8px;">
+                    <strong style="color: #10b981; font-size: 0.7rem; text-transform: uppercase;">${c.role}</strong>
+                    <div style="font-size: 1.1rem; font-weight: bold; color: #fff;">${c.name}</div>
+                    <a href="tel:${c.phone.replace(/\s/g, '')}" style="color: #3b82f6; text-decoration: none; font-size: 1.1rem;">${c.phone}</a>
+                </div>`).join('');
 
-        // Share Functionality
-        async function shareNote() {
-            if (!notepad.value) return alert("Note is empty!");
-            if (navigator.share) {
-                try {
-                    await navigator.share({ title: 'Bromyard Depot Note', text: notepad.value });
-                } catch (err) {}
-            } else {
-                navigator.clipboard.writeText(notepad.value);
-                alert("Note copied to clipboard!");
-            }
+            const modal = `
+                <div id="cModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; display:flex; justify-content:center; align-items:center; padding:20px;">
+                    <div style="background:#1e293b; width:100%; max-width:350px; padding:25px; border-radius:16px; border:1px solid #ef4444;">
+                        <h2 style="margin-top:0; color:#ef4444; font-size:1.4rem;">Emergency Details</h2>
+                        <div style="margin-bottom: 20px; padding: 10px; background: rgba(225, 31, 38, 0.1); border-radius: 8px;">
+                            <strong style="color: #fff; font-size: 0.7rem; text-transform: uppercase;">Location w3w:</strong><br>
+                            <div class="w3w-box">${depotLocation}</div>
+                        </div>
+                        ${listHtml}
+                        <button onclick="document.getElementById('cModal').remove()" style="width:100%; padding:12px; background:#ef4444; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">CLOSE</button>
+                    </div>
+                </div>`;
+            document.body.insertAdjacentHTML('beforeend', modal);
         }
     </script>
 </body>
