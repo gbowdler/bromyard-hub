@@ -3,25 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BW - Bale Multi-Scanner</title>
+    <title>BW - Depot Multi-Scanner</title>
     <link rel="stylesheet" href="../style.css">
     <style>
         .container { max-width: 600px; padding: 20px; position: relative; }
-        .hub-link { position: fixed; top: 15px; right: 15px; background: #1e293b; color: #10b981; padding: 8px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: bold; text-decoration: none; border: 1px solid #334155; z-index: 1000; }
+        
+        /* Consistent Hub Navigation */
+        .hub-link {
+            position: fixed; top: 15px; right: 15px; background: #1e293b; color: #10b981;
+            padding: 8px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: bold;
+            text-decoration: none; border: 1px solid #334155; z-index: 1000;
+        }
+
+        /* Standardised Header */
         .profile { text-align: center; margin-bottom: 30px; }
         .profile h1 { color: white; font-size: 1.6rem; margin-bottom: 5px; }
-        .profile p { font-size: 1.1rem; font-weight: 800; color: #10b981; text-transform: uppercase; letter-spacing: 0.15em; margin: 0; }
+        .profile p { 
+            font-size: 1.1rem; font-weight: 800; color: #10b981; 
+            text-transform: uppercase; letter-spacing: 0.15em; margin: 0;
+        }
+
+        /* Input Styling */
         label { display: block; font-size: 0.75rem; font-weight: bold; color: #64748b; margin-bottom: 8px; text-transform: uppercase; }
-        input[type="password"] { width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; margin-bottom: 10px; box-sizing: border-box; }
+        input[type="password"] { 
+            width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #334155; 
+            background: #0f172a; color: white; margin-bottom: 20px; box-sizing: border-box;
+        }
+
+        /* Photo Grid UI */
+        .btn-upload { background: #1e293b; color: white; border: 1px solid #334155; width: 100%; padding: 15px; border-radius: 12px; cursor: pointer; font-weight: bold; }
         .file-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin: 15px 0; }
         .file-item { position: relative; border-radius: 8px; overflow: hidden; aspect-ratio: 1; border: 1px solid #334155; }
         .file-item img { width: 100%; height: 100%; object-fit: cover; }
         .remove-btn { position: absolute; top: 2px; right: 2px; background: rgba(239, 68, 68, 0.9); color: white; border-radius: 50%; width: 20px; height: 20px; text-align: center; cursor: pointer; font-size: 14px; line-height: 20px; }
-        .btn-upload { background: #1e293b; color: white; border: 1px solid #334155; width: 100%; padding: 15px; border-radius: 12px; cursor: pointer; font-weight: bold; }
+
+        /* Process Button & Progress */
         .btn-process { background: #10b981; color: white; width: 100%; padding: 18px; border-radius: 12px; font-weight: 800; border: none; margin-top: 10px; cursor: pointer; opacity: 0.4; pointer-events: none; transition: 0.2s; }
         .btn-process.active { opacity: 1; pointer-events: auto; }
         .progress-bar { height: 8px; background: #1e293b; border-radius: 4px; margin: 20px 0; overflow: hidden; display: none; }
         .progress-fill { height: 100%; background: #10b981; width: 0%; transition: width 0.3s; }
+
         #status { text-align: center; font-size: 0.9rem; color: #94a3b8; font-style: italic; margin-bottom: 15px; }
         textarea { width: 100%; height: 180px; background: #0f172a; color: #10b981; border: 1px solid #334155; border-radius: 8px; padding: 10px; font-family: monospace; font-size: 0.8rem; }
         .btn-download { display: block; background: #3b82f6; color: white; text-align: center; padding: 16px; border-radius: 12px; text-decoration: none; margin-top: 15px; font-weight: bold; }
@@ -30,30 +51,37 @@
 <body>
     <div class="container">
         <a href="../index.html" class="hub-link">← HUB</a>
+
         <header class="profile">
             <h1>Multi-Scanner</h1>
             <p>Bromyard Depot</p>
         </header>
+
         <div class="input-group">
             <label>Google Gemini API Key</label>
             <input type="password" id="apiKey" placeholder="Paste AIza... key here" autocomplete="off">
         </div>
+
         <div class="group">
-            <label>Paperwork Photos</label>
-            <button class="btn-upload" onclick="document.getElementById('fileInput').click()">📸 Take Multiple Photos</button>
+            <label>Photos of Paperwork</label>
+            <button class="btn-upload" onclick="document.getElementById('fileInput').click()">📸 Select / Take Photos</button>
             <input type="file" id="fileInput" multiple accept="image/*" style="display: none;">
             <div id="fileList" class="file-list"></div>
             <button id="clearBtn" style="display:none; background:none; border:none; color:#ef4444; font-size:0.8rem; cursor:pointer;">Clear All</button>
         </div>
-        <button id="processBtn" class="btn-process">PROCESS ALL SHEETS</button>
+
+        <button id="processBtn" class="btn-process">Process All Images</button>
+
         <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
         <div id="status"></div>
+
         <div id="results" style="display:none;">
-            <label>Combined CSV Data:</label>
+            <label>Combined CSV Data (No Headers):</label>
             <textarea id="csvOutput" readonly></textarea>
-            <a id="downloadLink" class="btn-download" download="bale_import.csv">Download CSV for Excel</a>
+            <a id="downloadLink" class="btn-download" download="bale_data_import.csv">Download Import File</a>
         </div>
     </div>
+
     <script>
         const apiKeyInput = document.getElementById('apiKey');
         const fileInput = document.getElementById('fileInput');
@@ -66,15 +94,11 @@
         const progressBar = document.getElementById('progressBar');
         const progressFill = document.getElementById('progressFill');
         const clearBtn = document.getElementById('clearBtn');
+
         let selectedFiles = [];
-        function updateReadyState() {
-            const hasKey = apiKeyInput.value.trim().length > 10;
-            const hasFiles = selectedFiles.length > 0;
-            clearBtn.style.display = hasFiles ? 'inline-block' : 'none';
-            if (hasKey && hasFiles) processBtn.classList.add('active');
-            else processBtn.classList.remove('active');
-        }
+
         apiKeyInput.addEventListener('input', updateReadyState);
+
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
                 Array.from(e.target.files).forEach(file => {
@@ -84,7 +108,11 @@
                         const div = document.createElement('div');
                         div.className = 'file-item';
                         div.innerHTML = `<img src="${event.target.result}"><div class="remove-btn">×</div>`;
-                        div.querySelector('.remove-btn').onclick = () => { div.remove(); selectedFiles = selectedFiles.filter(f => f !== file); updateReadyState(); };
+                        div.querySelector('.remove-btn').onclick = () => {
+                            div.remove();
+                            selectedFiles = selectedFiles.filter(f => f !== file);
+                            updateReadyState();
+                        };
                         fileListDiv.appendChild(div);
                     };
                     reader.readAsDataURL(file);
@@ -92,31 +120,71 @@
                 updateReadyState();
             }
         });
+
+        clearBtn.onclick = () => { selectedFiles = []; fileListDiv.innerHTML = ''; updateReadyState(); };
+
+        function updateReadyState() {
+            const hasKey = apiKeyInput.value.trim().length > 10;
+            const hasFiles = selectedFiles.length > 0;
+            clearBtn.style.display = hasFiles ? 'inline-block' : 'none';
+            if (hasKey && hasFiles) processBtn.classList.add('active');
+            else processBtn.classList.remove('active');
+        }
+
         processBtn.addEventListener('click', async () => {
             const apiKey = apiKeyInput.value.trim();
-            processBtn.disabled = true; resultsDiv.style.display = 'none'; progressBar.style.display = 'block';
-            let combinedCSV = "Date,Bale No,Grade,Clip No,Producer,Sheets,No Packed,Gross,Net\n";
+            processBtn.disabled = true;
+            resultsDiv.style.display = 'none';
+            progressBar.style.display = 'block';
+            
+            let combinedCSV = "";
+
             for (let i = 0; i < selectedFiles.length; i++) {
                 statusDiv.innerText = `Processing Sheet ${i + 1} of ${selectedFiles.length}...`;
                 progressFill.style.width = `${((i + 1) / selectedFiles.length) * 100}%`;
                 try {
-                    const base64 = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.readAsDataURL(selectedFiles[i]); });
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                        method: "POST", headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ "contents": [{ "parts": [{ "text": "Extract British Wool bale data into CSV format. Columns: Date, Bale No, Grade, Clip No, Producer, Sheets, No Packed, Gross, Net. Repeat 'Date' and 'Bale No' for every row. Do NOT include headers." }, { "inline_data": { "mime_type": selectedFiles[i].type, "data": base64 } }] }] })
-                    });
-                    const data = await response.json();
-                    if (data.error) throw new Error(data.error.message);
-                    const csvPart = data.candidates[0].content.parts[0].text.trim();
-                    const cleanLines = csvPart.split('\n').filter(line => line.trim() !== "" && !line.toLowerCase().includes('date') && !line.includes('```'));
-                    combinedCSV += cleanLines.join('\n') + "\n";
-                } catch (err) { statusDiv.innerText = `❌ Error: ${err.message}`; processBtn.disabled = false; return; }
+                    const base64 = await getBase64(selectedFiles[i]);
+                    const csvPart = await callGemini(apiKey, base64, selectedFiles[i].type);
+                    if (csvPart) {
+                        const cleanLines = csvPart.split('\n').filter(line => 
+                            line.trim() !== "" && !line.toLowerCase().includes('date') && !line.includes('```')
+                        );
+                        combinedCSV += cleanLines.join('\n') + "\n";
+                    }
+                } catch (err) {
+                    statusDiv.innerText = `❌ Error on sheet ${i+1}: ${err.message}`;
+                    processBtn.disabled = false;
+                    return;
+                }
             }
+
             statusDiv.innerHTML = "<span style='color:#10b981;'>✅ Batch Complete</span>";
-            csvOutput.value = combinedCSV; resultsDiv.style.display = 'block';
+            csvOutput.value = combinedCSV;
+            resultsDiv.style.display = 'block';
             downloadLink.href = URL.createObjectURL(new Blob([combinedCSV], { type: 'text/csv' }));
             processBtn.disabled = false;
         });
+
+        function getBase64(file) {
+            return new Promise((res, rej) => {
+                const reader = new FileReader();
+                reader.onload = () => res(reader.result.split(',')[1]);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function callGemini(key, base64, mime) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+            const prompt = `Extract wool bale data into CSV. Columns: Date Packed, Bale No, Cluster Type, Clip No, Producer Name, Sheets Packed, Gross Weight, Net Weight. STRICT: No headers, no markdown.`;
+            const response = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ "contents": [{ "parts": [{ "text": prompt }, { "inline_data": { "mime_type": mime, "data": base64 } }] }] })
+            });
+            const data = await response.json();
+            if (data.error) throw new Error(data.error.message);
+            return data.candidates[0].content.parts[0].text.trim();
+        }
     </script>
 </body>
 </html>
