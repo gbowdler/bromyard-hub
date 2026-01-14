@@ -220,18 +220,55 @@
             localStorage.setItem('baleTrackerSeason', JSON.stringify(seasonData));
         }
         
+        // Temporary load state - for in-progress loads
+        function getTempLoadState() {
+            const data = sessionStorage.getItem('baleTrackerTempLoad');
+            return data ? JSON.parse(data) : null;
+        }
+        
+        function saveTempLoadState() {
+            const state = {
+                haulierName,
+                maxLimit,
+                currentCount,
+                manifestData
+            };
+            sessionStorage.setItem('baleTrackerTempLoad', JSON.stringify(state));
+        }
+        
+        function clearTempLoadState() {
+            sessionStorage.removeItem('baleTrackerTempLoad');
+        }
+        
+        function restoreTempLoadState() {
+            const state = getTempLoadState();
+            if (state) {
+                haulierName = state.haulierName;
+                maxLimit = state.maxLimit;
+                currentCount = state.currentCount;
+                manifestData = state.manifestData;
+                
+                document.getElementById('haulierSection').classList.add('hidden');
+                document.getElementById('entrySection').classList.remove('hidden');
+                updateStatusUi();
+                renderManifestList();
+            }
+        }
+        
         function updateSeasonStats() {
             const seasonData = getSeasonData();
             document.getElementById('seasonBaleCount').textContent = seasonData.bales.length;
             document.getElementById('seasonLoadCount').textContent = seasonData.loads;
         }
         
-        function addBaleToSeason(baleNumber) {
+        function addBalesToSeason(baleNumbers) {
             const seasonData = getSeasonData();
-            if (!seasonData.bales.includes(baleNumber)) {
-                seasonData.bales.push(baleNumber);
-                saveSeasonData(seasonData);
-            }
+            baleNumbers.forEach(baleNum => {
+                if (!seasonData.bales.includes(baleNum)) {
+                    seasonData.bales.push(baleNum);
+                }
+            });
+            saveSeasonData(seasonData);
         }
         
         function incrementLoadCount() {
@@ -290,7 +327,7 @@
                 return; 
             }
             
-            // Check if bale was transported earlier this season
+            // Check if bale was transported earlier this season (completed loads only)
             if (isBaleInSeason(baleNum)) {
                 showModal(`⚠️ Bale #${baleNum} was already transported this season!\n\nAdd anyway with DUPLICATE tag?`, () => {
                     addBaleToManifest(baleNum, true);
@@ -312,14 +349,13 @@
             }
             
             manifestData.push({ number: baleNum, type: typeStr, ref: refValue, val: 1 });
-            addBaleToSeason(baleNum);
             currentCount++;
             
             document.getElementById('baleNumber').value = "";
             document.getElementById('baleNumber').focus();
-            updateSeasonStats();
             updateStatusUi();
             renderManifestList();
+            saveTempLoadState(); // Save state after each bale added
         }
 
         function renderManifestList() {
@@ -340,18 +376,25 @@
 
         function requestDelete(n) { showModal(`Delete Bale #${n}?`, () => {
             const idx = manifestData.findIndex(i => i.number === n);
-            currentCount--; manifestData.splice(idx, 1); updateStatusUi(); renderManifestList();
+            currentCount--; manifestData.splice(idx, 1); 
+            updateStatusUi(); 
+            renderManifestList();
+            saveTempLoadState(); // Update temp state after deletion
         });}
 
         function requestReset() { showModal("Start new load?", () => { 
-            // Increment load count before resetting
+            // Add current load bales to season permanently
+            const baleNumbers = manifestData.map(item => item.number);
+            addBalesToSeason(baleNumbers);
             incrementLoadCount();
+            clearTempLoadState();
             location.reload(); 
         });}
         
         function requestSeasonReset() {
             showModal("⚠️ RESET ENTIRE SEASON?\n\nThis will clear ALL bale history and load counts.\n\nAre you sure?", () => {
                 localStorage.removeItem('baleTrackerSeason');
+                clearTempLoadState();
                 alert("Season data cleared!");
                 location.reload();
             });
@@ -360,7 +403,9 @@
         async function finishAndShare() {
             if (manifestData.length === 0) return;
             
-            // Increment load count
+            // Add current load bales to season permanently
+            const baleNumbers = manifestData.map(item => item.number);
+            addBalesToSeason(baleNumbers);
             incrementLoadCount();
             
             // Sort bales numerically before generating CSV
@@ -368,6 +413,10 @@
             
             let csv = "Bale Number,Type,Reference\n" + sortedData.map(i => `${i.number},${i.type},${i.ref}`).join("\n");
             const file = new File([csv], `Bale_Manifest_${new Date().toISOString().slice(0,10)}.csv`, { type: "text/csv" });
+            
+            // Clear temp state after successful share
+            clearTempLoadState();
+            
             if (navigator.share) await navigator.share({ files: [file], title: "Bale Manifest" });
         }
 
@@ -378,8 +427,9 @@
             navigator.clipboard.writeText(text).then(() => alert("Copied!"));
         }
         
-        // Initialize season stats on page load
+        // Initialize on page load
         updateSeasonStats();
+        restoreTempLoadState(); // Restore any in-progress load
     </script>
 </body>
 </html>
