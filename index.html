@@ -85,6 +85,7 @@
 <body>
     <div class="container">
         <header class="profile">
+            <button onclick="openSettings()" style="position: fixed; top: 15px; right: 15px; background: #1e293b; color: #f1f5f9; padding: 10px 14px; border-radius: 8px; border: 1px solid #334155; font-size: 1.2rem; cursor: pointer; z-index: 1000;">⚙️</button>
             <img src="bw-logo.png" class="avatar" alt="British Wool Logo">
             <h1>Bromyard Depot</h1>
             <p>Utility Suite</p>
@@ -110,23 +111,18 @@
                 </div>
             </div>
 
-            <div class="section-title">Machinery & Assets</div>
+            <div class="section-title">Health & Safety</div>
+            <button class="link-card btn-emergency" style="width: 100%; cursor: pointer;" onclick="showEmergencyDetails()">EMERGENCY DETAILS</button>
+            <a href="#" class="link-card btn-first-aid">First Aid Kit Log</a>
             <button id="scanBtn" class="btn-scanner"><span>📷</span> Scan Machine QR Code</button>
             <div id="reader"></div>
-
-            <div class="section-title">Health & Safety</div>
-            <a href="#" class="link-card btn-first-aid">First Aid Kit Log</a>
-            <button class="link-card btn-emergency" style="width: 100%; cursor: pointer;" onclick="showEmergencyDetails()">EMERGENCY DETAILS</button>
             
-            <div class="section-title">Backup & Restore</div>
-            <button class="btn-scanner" onclick="createBackup()">💾 Export Backup</button>
-            <button class="btn-scanner" onclick="document.getElementById('restoreInput').click()">📥 Restore from Backup</button>
             <input type="file" id="restoreInput" accept=".json" style="display: none;" onchange="restoreFromBackup(event)">
         </main>
         
         <footer class="socials" style="margin-top:10px;">
             <a href="print-qr.html" style="color: #10b981; font-size: 0.7rem; text-decoration: none;">Print QR Poster</a>
-            <div class="version-tag" style="font-size: 0.6rem; color: #475569; margin-top: 2px;">Build v1.2.3-Bromyard</div>
+            <div class="version-tag" style="font-size: 0.6rem; color: #475569; margin-top: 2px;">Build v1.3.0-Bromyard</div>
         </footer>
     </div>
 
@@ -185,6 +181,34 @@
                 navigator.clipboard.writeText(noteArea.value);
                 alert("Note copied!");
             }
+        }
+        
+        function openSettings() {
+            const modal = `
+                <div id="settingsModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; display:flex; justify-content:center; align-items:center; padding:15px;">
+                    <div style="background:#1e293b; width:100%; max-width:350px; padding:20px; border-radius:16px; border:1px solid #334155;">
+                        <h2 style="margin-top:0; color:#10b981; font-size:1.2rem;">⚙️ Settings</h2>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <strong style="color: #fff; font-size: 0.85rem; display: block; margin-bottom: 10px;">💾 Backup & Restore</strong>
+                            <button onclick="createBackup()" style="width:100%; padding:12px; background:#334155; color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer; margin-bottom:8px;">💾 Export Backup</button>
+                            <button onclick="document.getElementById('restoreInput').click()" style="width:100%; padding:12px; background:#334155; color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer;">📥 Restore from Backup</button>
+                        </div>
+                        
+                        <div style="padding: 12px; background: rgba(16, 185, 129, 0.05); border-radius: 8px; border: 1px solid #334155; margin-bottom: 15px;">
+                            <strong style="color: #94a3b8; font-size: 0.7rem; display: block; margin-bottom: 4px;">ℹ️ VERSION</strong>
+                            <div style="color: #fff; font-size: 0.85rem; font-weight: 600;">Build v1.3.0-Bromyard</div>
+                        </div>
+                        
+                        <button onclick="closeSettings()" style="width:100%; padding:12px; background:#ef4444; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">CLOSE</button>
+                    </div>
+                </div>`;
+            document.body.insertAdjacentHTML('beforeend', modal);
+        }
+        
+        function closeSettings() {
+            const modal = document.getElementById('settingsModal');
+            if (modal) modal.remove();
         }
 
         function showEmergencyDetails() {
