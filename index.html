@@ -65,7 +65,7 @@
             border-radius: 0 0 12px 12px; padding: 12px; margin-top: -2px;
         }
         .note-content.open { display: block; }
-        #depotNotes { width: 100%; height: 90px; background: #0f172a; color: #f1f5f9; border: 1px solid #334155; border-radius: 8px; padding: 8px; font-size: 0.85rem; resize: none; box-sizing: border-box; }
+        #depotNotes { width: 100%; height: 180px; background: #0f172a; color: #f1f5f9; border: 1px solid #334155; border-radius: 8px; padding: 8px; font-size: 0.85rem; resize: none; box-sizing: border-box; }
 
         .btn-scanner { background: #1e293b; border: 1px solid #334155; color: white; padding: 12px; border-radius: 10px; font-weight: 600; margin-bottom: 6px; cursor: pointer; font-size: 0.9rem; width: 100%; }
 
@@ -160,8 +160,14 @@
         noteToggle.onclick = () => {
             const isOpen = noteContent.classList.toggle('open');
             document.getElementById('toggleIcon').innerText = isOpen ? '▲' : '▼';
-            // Round the top button corners when open
-            noteToggle.style.borderRadius = isOpen ? "10px 10px 0 0" : "10px";
+            // Round the top button corners and add green border when open
+            if (isOpen) {
+                noteToggle.style.borderRadius = "10px 10px 0 0";
+                noteToggle.style.borderColor = "#10b981";
+            } else {
+                noteToggle.style.borderRadius = "10px";
+                noteToggle.style.borderColor = "#334155";
+            }
             if(isOpen) noteArea.focus();
         };
 
