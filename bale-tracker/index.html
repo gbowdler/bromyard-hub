@@ -202,7 +202,7 @@
 
             <button type="button" class="btn-success" style="margin-top: 20px;" onclick="finishAndShare()">Share / Save CSV</button>
             <button type="button" class="btn-secondary" onclick="copyManifest()">Copy to Clipboard</button>
-            <button type="button" class="btn-danger" style="margin-top: 20px; opacity: 0.6;" onclick="requestReset()">New Load</button>
+            <button type="button" class="btn-danger" style="margin-top: 20px; opacity: 0.6;" onclick="requestCancel()">Cancel Load</button>
             <button type="button" class="btn-danger" style="margin-top: 10px; opacity: 0.4; font-size: 14px;" onclick="requestSeasonReset()">🔄 Reset Season Data</button>
         </div>
     </div>
@@ -382,14 +382,13 @@
             saveTempLoadState(); // Update temp state after deletion
         });}
 
-        function requestReset() { showModal("Start new load?", () => { 
-            // Add current load bales to season permanently
-            const baleNumbers = manifestData.map(item => item.number);
-            addBalesToSeason(baleNumbers);
-            incrementLoadCount();
-            clearTempLoadState();
-            location.reload(); 
-        });}
+        function requestCancel() { 
+            showModal("Cancel this load?\n\nBales will NOT be saved to season history.", () => { 
+                // Just clear temp state and reload - don't save anything to season
+                clearTempLoadState();
+                location.reload(); 
+            });
+        }
         
         function requestSeasonReset() {
             showModal("⚠️ RESET ENTIRE SEASON?\n\nThis will clear ALL bale history and load counts.\n\nAre you sure?", () => {
