@@ -201,9 +201,6 @@
             <ul id="manifestList"></ul>
 
             <button type="button" class="btn-success" style="margin-top: 20px;" onclick="finishAndShare()">Share / Save CSV</button>
-            <button type="button" class="btn-secondary" onclick="copyManifest()">Copy to Clipboard</button>
-            <button type="button" class="btn-secondary" onclick="document.getElementById('restoreInput').click()" style="margin-top: 10px; font-size: 14px;">📥 Restore Backup</button>
-            <input type="file" id="restoreInput" accept=".json" style="display: none;" onchange="restoreFromBackup(event)">
             <button type="button" class="btn-danger" style="margin-top: 20px; opacity: 0.6;" onclick="requestCancel()">Cancel Load</button>
             <button type="button" class="btn-danger" style="margin-top: 10px; opacity: 0.4; font-size: 14px;" onclick="requestSeasonReset()">🔄 Reset Season Data</button>
         </div>
@@ -425,13 +422,6 @@
             
             if (navigator.share) await navigator.share({ files: [file], title: "Bale Manifest" });
         }
-
-        function copyManifest() {
-            // Sort bales numerically before copying
-            const sortedData = [...manifestData].sort((a, b) => a.number - b.number);
-            let text = sortedData.map(i => `#${i.number} - ${i.type}`).join("\n");
-            navigator.clipboard.writeText(text).then(() => alert("Copied!"));
-        }
         
         // Backup system
         function createBackup() {
@@ -457,47 +447,7 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
-        
-        function restoreFromBackup(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const backup = JSON.parse(e.target.result);
-                    
-                    if (!backup.version || !backup.data) {
-                        alert('Invalid backup file format!');
-                        return;
-                    }
-                    
-                    // Confirm before restoring
-                    if (!confirm('This will replace ALL current data with the backup.\n\nAre you sure?')) {
-                        return;
-                    }
-                    
-                    // Restore all data
-                    if (backup.data.season) {
-                        localStorage.setItem('baleTrackerSeason', JSON.stringify(backup.data.season));
-                    }
-                    if (backup.data.contacts) localStorage.setItem('bromyard_emergency_contacts', backup.data.contacts);
-                    if (backup.data.location) localStorage.setItem('bromyard_w3w_location', backup.data.location);
-                    if (backup.data.notes) localStorage.setItem('bromyard_notes', backup.data.notes);
-                    
-                    alert('Backup restored successfully!\n\nReloading page...');
-                    location.reload();
-                    
-                } catch (error) {
-                    alert('Error reading backup file: ' + error.message);
-                }
-            };
-            reader.readAsText(file);
-            
-            // Reset input so same file can be selected again
-            event.target.value = '';
-        }
-        
+                
         // Initialize on page load
         updateSeasonStats();
         restoreTempLoadState(); // Restore any in-progress load
