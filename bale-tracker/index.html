@@ -143,6 +143,12 @@
         
         <div id="haulierSection">
             <h2 style="font-size: 1.3rem; margin-top: 0; color: #fff;">Transport Haulier</h2>
+            <div id="seasonStats" style="background: #0f172a; padding: 12px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color); text-align: center;">
+                <div style="font-size: 1.1rem; color: var(--primary-color); font-weight: bold;">This Season</div>
+                <div style="font-size: 1rem; color: #94a3b8; margin-top: 5px;">
+                    <span id="seasonBaleCount">0</span> bales • <span id="seasonLoadCount">0</span> loads
+                </div>
+            </div>
             <label>Who is transporting?</label>
             <select id="haulierSelect" onchange="checkOtherHaulier()">
                 <option value="Nigel|17">Nigel (Max 17)</option>
@@ -197,11 +203,48 @@
             <button type="button" class="btn-success" style="margin-top: 20px;" onclick="finishAndShare()">Share / Save CSV</button>
             <button type="button" class="btn-secondary" onclick="copyManifest()">Copy to Clipboard</button>
             <button type="button" class="btn-danger" style="margin-top: 20px; opacity: 0.6;" onclick="requestReset()">New Load</button>
+            <button type="button" class="btn-danger" style="margin-top: 10px; opacity: 0.4; font-size: 14px;" onclick="requestSeasonReset()">🔄 Reset Season Data</button>
         </div>
     </div>
 
     <script>
         let haulierName = ""; let maxLimit = 0; let currentCount = 0; let manifestData = []; 
+        
+        // Season tracking - stores all bales transported this season
+        function getSeasonData() {
+            const data = localStorage.getItem('baleTrackerSeason');
+            return data ? JSON.parse(data) : { bales: [], loads: 0 };
+        }
+        
+        function saveSeasonData(seasonData) {
+            localStorage.setItem('baleTrackerSeason', JSON.stringify(seasonData));
+        }
+        
+        function updateSeasonStats() {
+            const seasonData = getSeasonData();
+            document.getElementById('seasonBaleCount').textContent = seasonData.bales.length;
+            document.getElementById('seasonLoadCount').textContent = seasonData.loads;
+        }
+        
+        function addBaleToSeason(baleNumber) {
+            const seasonData = getSeasonData();
+            if (!seasonData.bales.includes(baleNumber)) {
+                seasonData.bales.push(baleNumber);
+                saveSeasonData(seasonData);
+            }
+        }
+        
+        function incrementLoadCount() {
+            const seasonData = getSeasonData();
+            seasonData.loads++;
+            saveSeasonData(seasonData);
+            updateSeasonStats();
+        }
+        
+        function isBaleInSeason(baleNumber) {
+            const seasonData = getSeasonData();
+            return seasonData.bales.includes(baleNumber);
+        }
 
         function showModal(message, confirmCallback) {
             document.getElementById('modalMessage').innerText = message;
@@ -240,15 +283,43 @@
             const numInput = document.getElementById('baleNumber');
             const baleNum = parseInt(numInput.value);
             if (isNaN(baleNum)) { alert("Invalid Bale #"); return; }
-            if (manifestData.some(item => item.number === baleNum)) { alert("Bale already added!"); return; }
-
+            
+            // Check if already in current load
+            if (manifestData.some(item => item.number === baleNum)) { 
+                alert("Bale already added to this load!"); 
+                return; 
+            }
+            
+            // Check if bale was transported earlier this season
+            if (isBaleInSeason(baleNum)) {
+                showModal(`⚠️ Bale #${baleNum} was already transported this season!\n\nAdd anyway with DUPLICATE tag?`, () => {
+                    addBaleToManifest(baleNum, true);
+                });
+                return;
+            }
+            
+            addBaleToManifest(baleNum, false);
+        }
+        
+        function addBaleToManifest(baleNum, isDuplicate) {
             const sizeSelect = document.getElementById('clusterSize').value;
             let typeStr = sizeSelect === 'Custom' ? document.getElementById('customSizeInput').value + "BC" : (sizeSelect === "1" ? "Single" : sizeSelect + "BC");
+            let refValue = document.getElementById('clusterRef').value;
             
-            manifestData.push({ number: baleNum, type: typeStr, ref: document.getElementById('clusterRef').value, val: 1 });
+            // Add DUPLICATE tag if this is an override
+            if (isDuplicate) {
+                refValue = refValue ? refValue + " [DUPLICATE]" : "DUPLICATE";
+            }
+            
+            manifestData.push({ number: baleNum, type: typeStr, ref: refValue, val: 1 });
+            addBaleToSeason(baleNum);
             currentCount++;
-            numInput.value = ""; numInput.focus();
-            updateStatusUi(); renderManifestList();
+            
+            document.getElementById('baleNumber').value = "";
+            document.getElementById('baleNumber').focus();
+            updateSeasonStats();
+            updateStatusUi();
+            renderManifestList();
         }
 
         function renderManifestList() {
@@ -272,10 +343,25 @@
             currentCount--; manifestData.splice(idx, 1); updateStatusUi(); renderManifestList();
         });}
 
-        function requestReset() { showModal("Start new load?", () => { location.reload(); });}
+        function requestReset() { showModal("Start new load?", () => { 
+            // Increment load count before resetting
+            incrementLoadCount();
+            location.reload(); 
+        });}
+        
+        function requestSeasonReset() {
+            showModal("⚠️ RESET ENTIRE SEASON?\n\nThis will clear ALL bale history and load counts.\n\nAre you sure?", () => {
+                localStorage.removeItem('baleTrackerSeason');
+                alert("Season data cleared!");
+                location.reload();
+            });
+        }
 
         async function finishAndShare() {
             if (manifestData.length === 0) return;
+            
+            // Increment load count
+            incrementLoadCount();
             
             // Sort bales numerically before generating CSV
             const sortedData = [...manifestData].sort((a, b) => a.number - b.number);
@@ -291,6 +377,9 @@
             let text = sortedData.map(i => `#${i.number} - ${i.type}`).join("\n");
             navigator.clipboard.writeText(text).then(() => alert("Copied!"));
         }
+        
+        // Initialize season stats on page load
+        updateSeasonStats();
     </script>
 </body>
 </html>
