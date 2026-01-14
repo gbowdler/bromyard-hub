@@ -55,7 +55,7 @@
         .btn-note-toggle { 
             background: #1e293b; border: 1px solid #334155; color: #f1f5f9; 
             font-size: 0.9rem; cursor: pointer; width: 100%; padding: 12px; 
-            border-radius: 10px; font-weight: 600; display: flex; justify-content: space-between; 
+            border-radius: 10px; font-weight: 600; display: flex; justify-content: center; 
             align-items: center; 
         }
 
@@ -99,8 +99,7 @@
 
             <div class="note-wrapper" style="margin-top: 8px;">
                 <button class="btn-note-toggle" id="noteToggle">
-                    <span>Depot Notepad</span>
-                    <span id="toggleIcon">▼</span>
+                    Depot Notepad <span id="toggleIcon" style="margin-left: 8px;">▼</span>
                 </button>
                 <div class="note-content" id="noteContent">
                     <textarea id="depotNotes" placeholder="Record shift notes here..."></textarea>
