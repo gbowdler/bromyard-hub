@@ -31,16 +31,16 @@
             position: relative;
         }
 
-        header h1 { font-size: 1.6rem; margin: 0; color: white; }
+        header h1 { font-size: 1.8rem; margin: 0; color: white; }
         header p { 
-            font-size: 1.1rem; font-weight: 800; color: var(--primary-color); 
+            font-size: 1.2rem; font-weight: 800; color: var(--primary-color); 
             text-transform: uppercase; letter-spacing: 0.15em; margin: 5px 0 0 0;
         }
 
         .back-link { 
             position: fixed; top: 15px; right: 15px; 
             background: var(--card-bg); color: var(--primary-color); 
-            padding: 8px 12px; border-radius: 8px; font-size: 0.75rem; 
+            padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; 
             font-weight: bold; text-decoration: none; border: 1px solid var(--border-color); 
             z-index: 1000;
         }
@@ -57,18 +57,19 @@
 
         .hidden { display: none !important; }
 
-        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
 
         input, select {
-            width: 100%; padding: 12px; margin-bottom: 15px;
+            width: 100%; padding: 16px; margin-bottom: 15px;
             border: 1px solid var(--border-color); border-radius: 8px;
             background: #0f172a; color: white;
-            font-size: 16px; box-sizing: border-box;
+            font-size: 20px; box-sizing: border-box;
+            font-weight: 600;
         }
 
         button {
-            width: 100%; padding: 15px; border: none; border-radius: 10px;
-            font-size: 16px; font-weight: bold; cursor: pointer;
+            width: 100%; padding: 18px; border: none; border-radius: 10px;
+            font-size: 18px; font-weight: bold; cursor: pointer;
             margin-bottom: 10px; transition: all 0.2s;
         }
 
@@ -78,9 +79,10 @@
         .btn-danger { background-color: var(--danger-color); color: white; }
 
         .status-bar {
-            background-color: #0f172a; padding: 15px; border-radius: 8px;
+            background-color: #0f172a; padding: 18px; border-radius: 8px;
             margin-bottom: 20px; text-align: center; font-weight: bold;
             border: 1px solid var(--border-color);
+            font-size: 1.3rem;
         }
         .status-warning { background-color: #eab308; color: black; }
         .status-danger { background-color: var(--danger-color); color: white; }
@@ -88,17 +90,17 @@
         #manifestList { list-style: none; padding: 0; margin-top: 20px; }
         #manifestList li {
             background-color: #0f172a; border-bottom: 1px solid var(--border-color);
-            padding: 12px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px; display: flex; justify-content: space-between; align-items: center;
             border-radius: 8px; margin-bottom: 8px;
         }
         
-        .bale-info { font-weight: bold; color: var(--primary-color); display: block; }
-        .bale-details { font-size: 0.85rem; color: #94a3b8; }
+        .bale-info { font-weight: bold; color: var(--primary-color); display: block; font-size: 1.3rem; }
+        .bale-details { font-size: 1.05rem; color: #94a3b8; margin-top: 4px; }
 
         .btn-list-delete {
             background: rgba(239, 68, 68, 0.1); color: #ef4444;
-            padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.2);
-            width: auto; margin: 0; font-size: 14px;
+            padding: 10px 14px; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.2);
+            width: auto; margin: 0; font-size: 16px; font-weight: 600;
         }
 
         .input-group { display: flex; gap: 10px; }
@@ -113,13 +115,17 @@
             background: var(--card-bg); padding: 25px; border-radius: 12px;
             width: 85%; max-width: 300px; text-align: center; border: 1px solid var(--border-color);
         }
+        #modalMessage {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
     </style>
 </head>
 <body>
 
     <div id="customModalOverlay" class="hidden">
         <div class="modal-box">
-            <div id="modalMessage" style="margin-bottom: 20px;">Are you sure?</div>
+            <div id="modalMessage">Are you sure?</div>
             <div style="display: flex; gap: 10px;">
                 <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
                 <button type="button" class="btn-danger" id="modalConfirmBtn">Yes</button>
@@ -136,7 +142,7 @@
     <div class="container">
         
         <div id="haulierSection">
-            <h2 style="font-size: 1.1rem; margin-top: 0; color: #fff;">Transport Haulier</h2>
+            <h2 style="font-size: 1.3rem; margin-top: 0; color: #fff;">Transport Haulier</h2>
             <label>Who is transporting?</label>
             <select id="haulierSelect" onchange="checkOtherHaulier()">
                 <option value="Nigel|17">Nigel (Max 17)</option>
@@ -185,7 +191,7 @@
 
             <button type="button" class="btn-primary" onclick="addBale()">Add Bale</button>
 
-            <h3 style="font-size: 1rem; margin-top: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Load List</h3>
+            <h3 style="font-size: 1.2rem; margin-top: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Load List</h3>
             <ul id="manifestList"></ul>
 
             <button type="button" class="btn-success" style="margin-top: 20px;" onclick="finishAndShare()">Share / Save CSV</button>
@@ -270,13 +276,19 @@
 
         async function finishAndShare() {
             if (manifestData.length === 0) return;
-            let csv = "Bale Number,Type,Reference\n" + manifestData.map(i => `${i.number},${i.type},${i.ref}`).join("\n");
+            
+            // Sort bales numerically before generating CSV
+            const sortedData = [...manifestData].sort((a, b) => a.number - b.number);
+            
+            let csv = "Bale Number,Type,Reference\n" + sortedData.map(i => `${i.number},${i.type},${i.ref}`).join("\n");
             const file = new File([csv], `Bale_Manifest_${new Date().toISOString().slice(0,10)}.csv`, { type: "text/csv" });
             if (navigator.share) await navigator.share({ files: [file], title: "Bale Manifest" });
         }
 
         function copyManifest() {
-            let text = manifestData.map(i => `#${i.number} - ${i.type}`).join("\n");
+            // Sort bales numerically before copying
+            const sortedData = [...manifestData].sort((a, b) => a.number - b.number);
+            let text = sortedData.map(i => `#${i.number} - ${i.type}`).join("\n");
             navigator.clipboard.writeText(text).then(() => alert("Copied!"));
         }
     </script>
