@@ -117,6 +117,11 @@
             <div class="section-title">Health & Safety</div>
             <a href="#" class="link-card btn-first-aid">First Aid Kit Log</a>
             <button class="link-card btn-emergency" style="width: 100%; cursor: pointer;" onclick="showEmergencyDetails()">EMERGENCY DETAILS</button>
+            
+            <div class="section-title">Backup & Restore</div>
+            <button class="btn-scanner" onclick="createBackup()">💾 Export Backup</button>
+            <button class="btn-scanner" onclick="document.getElementById('restoreInput').click()">📥 Restore from Backup</button>
+            <input type="file" id="restoreInput" accept=".json" style="display: none;" onchange="restoreFromBackup(event)">
         </main>
         
         <footer class="socials" style="margin-top:10px;">
@@ -267,9 +272,75 @@
             saveEmergencyContacts(updatedContacts);
             saveDepotLocation(updatedLocation);
             
+            // Auto-backup after updating contacts
+            createBackup();
+            
             // Show success and return to view mode
-            alert('Emergency details saved!');
+            alert('Emergency details saved! Backup created.');
             renderEmergencyModal(updatedContacts, updatedLocation, false);
+        }
+        
+        function createBackup() {
+            const backup = {
+                version: "1.0",
+                timestamp: new Date().toISOString(),
+                data: {
+                    contacts: localStorage.getItem('bromyard_emergency_contacts') || "[]",
+                    location: localStorage.getItem('bromyard_w3w_location') || "",
+                    notes: localStorage.getItem('bromyard_notes') || "",
+                    season: localStorage.getItem('baleTrackerSeason') || "{}"
+                }
+            };
+            
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bromyard-backup-${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('Backup file downloaded!');
+        }
+        
+        function restoreFromBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const backup = JSON.parse(e.target.result);
+                    
+                    if (!backup.version || !backup.data) {
+                        alert('Invalid backup file format!');
+                        return;
+                    }
+                    
+                    // Confirm before restoring
+                    if (!confirm('This will replace ALL current data with the backup.\n\nAre you sure?')) {
+                        return;
+                    }
+                    
+                    // Restore all data
+                    if (backup.data.contacts) localStorage.setItem('bromyard_emergency_contacts', backup.data.contacts);
+                    if (backup.data.location) localStorage.setItem('bromyard_w3w_location', backup.data.location);
+                    if (backup.data.notes) localStorage.setItem('bromyard_notes', backup.data.notes);
+                    if (backup.data.season) localStorage.setItem('baleTrackerSeason', backup.data.season);
+                    
+                    alert('Backup restored successfully!\n\nReloading page...');
+                    location.reload();
+                    
+                } catch (error) {
+                    alert('Error reading backup file: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+            
+            // Reset input so same file can be selected again
+            event.target.value = '';
         }
 
         function closeEmergencyModal() {
