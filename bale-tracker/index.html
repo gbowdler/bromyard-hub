@@ -63,13 +63,13 @@
             width: 100%; padding: 16px; margin-bottom: 15px;
             border: 1px solid var(--border-color); border-radius: 8px;
             background: #0f172a; color: white;
-            font-size: 20px; box-sizing: border-box;
+            font-size: 22px; box-sizing: border-box;
             font-weight: 600;
         }
 
         button {
             width: 100%; padding: 18px; border: none; border-radius: 10px;
-            font-size: 18px; font-weight: bold; cursor: pointer;
+            font-size: 20px; font-weight: bold; cursor: pointer;
             margin-bottom: 10px; transition: all 0.2s;
         }
 
@@ -82,7 +82,7 @@
             background-color: #0f172a; padding: 18px; border-radius: 8px;
             margin-bottom: 20px; text-align: center; font-weight: bold;
             border: 1px solid var(--border-color);
-            font-size: 1.3rem;
+            font-size: 1.5rem;
         }
         .status-warning { background-color: #eab308; color: black; }
         .status-danger { background-color: var(--danger-color); color: white; }
@@ -94,8 +94,8 @@
             border-radius: 8px; margin-bottom: 8px;
         }
         
-        .bale-info { font-weight: bold; color: var(--primary-color); display: block; font-size: 1.3rem; }
-        .bale-details { font-size: 1.05rem; color: #94a3b8; margin-top: 4px; }
+        .bale-info { font-weight: bold; color: var(--primary-color); display: block; font-size: 1.5rem; }
+        .bale-details { font-size: 1.15rem; color: #94a3b8; margin-top: 4px; }
 
         .btn-list-delete {
             background: rgba(239, 68, 68, 0.1); color: #ef4444;
@@ -164,11 +164,11 @@
             <div id="statusBar" class="status-bar">Loading: 0 / 0</div>
 
             <div class="input-group">
-                <div style="flex: 2;">
+                <div style="flex: 1.5;">
                     <label>Bale Number:</label>
                     <input type="tel" id="baleNumber" placeholder="e.g. 101">
                 </div>
-                <div>
+                <div style="flex: 1;">
                     <label>Type:</label>
                     <select id="clusterSize" onchange="handleClusterChange()">
                         <option value="1" selected>Single</option>
