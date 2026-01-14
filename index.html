@@ -10,7 +10,29 @@
     <link rel="apple-touch-icon" href="bw-logo.png">
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        /* Tightened container to push content up */
+        /* Base styles from style.css */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', sans-serif; }
+        body {
+            background-color: #0f172a;
+            background-image: radial-gradient(circle at top right, #1e293b, #0f172a);
+            display: flex; justify-content: center; align-items: flex-start;
+            min-height: 100vh; color: #f8fafc; padding: 40px 20px;
+        }
+        .avatar { width: 100px; height: auto; margin-bottom: 15px; }
+        .links { display: flex; flex-direction: column; gap: 12px; }
+        .link-card {
+            background: #1e293b; padding: 18px; border-radius: 12px;
+            text-decoration: none; color: white; font-weight: 600;
+            border: 1px solid #334155; transition: all 0.2s ease;
+            display: block; text-align: center;
+        }
+        .link-card:hover { border-color: #10b981; transform: translateY(-2px); background: #243147; }
+        .socials { margin-top: 40px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .socials a { color: #64748b; text-decoration: none; font-size: 0.85rem; border-bottom: 1px solid transparent; transition: 0.3s; }
+        .socials a:hover { color: #10b981; border-bottom: 1px solid #10b981; }
+        .version-tag { font-size: 0.65rem; color: #334155; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 20px; }
+        
+        /* Page-specific overrides */
         .container { padding: 5px 20px; }
         
         .section-title { font-size: 0.7rem; text-transform: uppercase; color: #64748b; margin: 12px 0 6px; text-align: left; }
@@ -49,7 +71,15 @@
 
         .btn-first-aid { background: #008b45; color: white; font-weight: bold; }
         .btn-emergency { background: #000; color: #ef4444; border: 2px solid #ef4444 !important; font-weight: 800; margin-top: 4px; padding: 12px; }
-        .w3w-box { background: #e11f26; color: white; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 0.8rem; display: inline-block; margin-top: 4px; }
+        .w3w-box { background: #e11f26; color: white; padding: 6px 10px; border-radius: 6px; font-family: monospace; font-size: 0.9rem; display: inline-block; margin-top: 4px; font-weight: bold; }
+        
+        .contact-input { 
+            width: 100%; padding: 8px; margin: 4px 0; background: #0f172a; 
+            color: white; border: 1px solid #334155; border-radius: 6px; 
+            font-size: 0.85rem; box-sizing: border-box;
+        }
+        
+        .edit-mode { background: rgba(16, 185, 129, 0.1); border-color: #10b981 !important; }
     </style>
 </head>
 <body>
@@ -86,21 +116,40 @@
 
             <div class="section-title">Health & Safety</div>
             <a href="#" class="link-card btn-first-aid">First Aid Kit Log</a>
-            <button class="link-card btn-emergency" style="width: 100%; cursor: pointer;" onclick="showEmergencyContacts()">EMERGENCY CONTACTS</button>
+            <button class="link-card btn-emergency" style="width: 100%; cursor: pointer;" onclick="showEmergencyDetails()">EMERGENCY DETAILS</button>
         </main>
         
         <footer class="socials" style="margin-top:10px;">
             <a href="print-qr.html" style="color: #10b981; font-size: 0.7rem; text-decoration: none;">Print QR Poster</a>
-            <div class="version-tag" style="font-size: 0.6rem; color: #475569; margin-top: 2px;">Build v1.2.2-Bromyard</div>
+            <div class="version-tag" style="font-size: 0.6rem; color: #475569; margin-top: 2px;">Build v1.2.3-Bromyard</div>
         </footer>
     </div>
 
     <script>
-        const depotLocation = "///intent.reeling.mops"; 
-        const depotContacts = [
+        const DEFAULT_LOCATION = "///intent.reeling.mops";
+        const DEFAULT_CONTACTS = [
             { role: "Depot Manager", name: "Gareth Bowdler", phone: "07929 667272" },
-            { role: "First Aider", name: "Gareth Bowdler", phone: "07929 667272" }
+            { role: "First Aider", name: "Gareth Bowdler", phone: "07929 667272" },
+            { role: "H&S Manager", name: "", phone: "" }
         ];
+
+        // Load saved contacts or use defaults
+        function getEmergencyContacts() {
+            const saved = localStorage.getItem('bromyard_emergency_contacts');
+            return saved ? JSON.parse(saved) : DEFAULT_CONTACTS;
+        }
+
+        function getDepotLocation() {
+            return localStorage.getItem('bromyard_w3w_location') || DEFAULT_LOCATION;
+        }
+
+        function saveEmergencyContacts(contacts) {
+            localStorage.setItem('bromyard_emergency_contacts', JSON.stringify(contacts));
+        }
+
+        function saveDepotLocation(location) {
+            localStorage.setItem('bromyard_w3w_location', location);
+        }
 
         const noteToggle = document.getElementById('noteToggle');
         const noteContent = document.getElementById('noteContent');
@@ -133,27 +182,98 @@
             }
         }
 
-        function showEmergencyContacts() {
-            let listHtml = depotContacts.map(c => `
-                <div style="margin-bottom: 10px; border-bottom: 1px solid #334155; padding-bottom: 6px;">
-                    <strong style="color: #10b981; font-size: 0.65rem;">${c.role}</strong>
-                    <div style="font-size: 1rem; font-weight: bold; color: #fff;">${c.name}</div>
-                    <a href="tel:${c.phone.replace(/\s/g, '')}" style="color: #3b82f6; text-decoration: none; font-size: 1rem;">${c.phone}</a>
-                </div>`).join('');
+        function showEmergencyDetails() {
+            const contacts = getEmergencyContacts();
+            const location = getDepotLocation();
+            const isEditing = false;
+            
+            renderEmergencyModal(contacts, location, isEditing);
+        }
+
+        function renderEmergencyModal(contacts, location, isEditing) {
+            // Remove existing modal if present
+            const existing = document.getElementById('cModal');
+            if (existing) existing.remove();
+
+            let contactsHtml = '';
+            
+            if (isEditing) {
+                contactsHtml = contacts.map((c, idx) => `
+                    <div style="margin-bottom: 12px; padding: 10px; background: rgba(16, 185, 129, 0.05); border-radius: 8px; border: 1px solid #334155;">
+                        <input type="text" class="contact-input edit-mode" id="role_${idx}" value="${c.role}" placeholder="Role (e.g. Depot Manager)">
+                        <input type="text" class="contact-input edit-mode" id="name_${idx}" value="${c.name}" placeholder="Name">
+                        <input type="tel" class="contact-input edit-mode" id="phone_${idx}" value="${c.phone}" placeholder="Phone Number">
+                    </div>`).join('');
+            } else {
+                contactsHtml = contacts.map(c => {
+                    if (!c.name && !c.phone) return ''; // Skip empty contacts
+                    return `
+                    <div style="margin-bottom: 10px; border-bottom: 1px solid #334155; padding-bottom: 6px;">
+                        <strong style="color: #10b981; font-size: 0.65rem;">${c.role}</strong>
+                        <div style="font-size: 1rem; font-weight: bold; color: #fff;">${c.name || 'Not set'}</div>
+                        ${c.phone ? `<a href="tel:${c.phone.replace(/\s/g, '')}" style="color: #3b82f6; text-decoration: none; font-size: 1rem;">${c.phone}</a>` : '<span style="color: #64748b; font-size: 0.85rem;">No phone number</span>'}
+                    </div>`}).join('');
+            }
+
+            const locationDisplay = isEditing 
+                ? `<input type="text" class="contact-input edit-mode" id="w3w_location" value="${location}" placeholder="///word.word.word" style="font-family: monospace;">`
+                : `<a href="https://what3words.com/${location}" target="_blank" style="text-decoration: none;">
+                     <div class="w3w-box" style="cursor: pointer;">${location} 📍</div>
+                   </a>`;
+
+            const actionButton = isEditing
+                ? `<button onclick="saveEmergencyChanges()" style="width:100%; padding:12px; background:#10b981; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:5px;">💾 SAVE CHANGES</button>`
+                : `<button onclick="toggleEditMode()" style="width:100%; padding:10px; background:#334155; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:5px;">✏️ EDIT DETAILS</button>`;
 
             const modal = `
-                <div id="cModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; display:flex; justify-content:center; align-items:center; padding:15px;">
-                    <div style="background:#1e293b; width:100%; max-width:300px; padding:20px; border-radius:16px; border:1px solid #ef4444;">
+                <div id="cModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; display:flex; justify-content:center; align-items:center; padding:15px; overflow-y: auto;">
+                    <div style="background:#1e293b; width:100%; max-width:350px; padding:20px; border-radius:16px; border:1px solid #ef4444; max-height: 90vh; overflow-y: auto;">
                         <h2 style="margin-top:0; color:#ef4444; font-size:1.2rem;">Emergency Details</h2>
-                        <div style="margin-bottom: 15px; padding: 8px; background: rgba(225, 31, 38, 0.1); border-radius: 8px;">
-                            <strong style="color: #fff; font-size: 0.65rem;">Location w3w:</strong><br>
-                            <div class="w3w-box">${depotLocation}</div>
+                        
+                        <div style="margin-bottom: 15px; padding: 10px; background: rgba(225, 31, 38, 0.1); border-radius: 8px;">
+                            <strong style="color: #fff; font-size: 0.75rem; display: block; margin-bottom: 4px;">📍 What3Words Location:</strong>
+                            ${locationDisplay}
+                            ${!isEditing ? '<div style="font-size: 0.65rem; color: #94a3b8; margin-top: 6px;">Tap to open in What3Words app</div>' : ''}
                         </div>
-                        ${listHtml}
-                        <button onclick="document.getElementById('cModal').remove()" style="width:100%; padding:10px; background:#ef4444; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:5px;">CLOSE</button>
+                        
+                        <div style="margin-bottom: 10px;">
+                            <strong style="color: #fff; font-size: 0.75rem; display: block; margin-bottom: 8px;">📞 Emergency Contacts:</strong>
+                            ${contactsHtml}
+                        </div>
+                        
+                        ${actionButton}
+                        <button onclick="closeEmergencyModal()" style="width:100%; padding:10px; background:#ef4444; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:5px;">CLOSE</button>
                     </div>
                 </div>`;
             document.body.insertAdjacentHTML('beforeend', modal);
+        }
+
+        function toggleEditMode() {
+            const contacts = getEmergencyContacts();
+            const location = getDepotLocation();
+            renderEmergencyModal(contacts, location, true);
+        }
+
+        function saveEmergencyChanges() {
+            const contacts = getEmergencyContacts();
+            const updatedContacts = contacts.map((c, idx) => ({
+                role: document.getElementById(`role_${idx}`).value,
+                name: document.getElementById(`name_${idx}`).value,
+                phone: document.getElementById(`phone_${idx}`).value
+            }));
+            
+            const updatedLocation = document.getElementById('w3w_location').value;
+            
+            saveEmergencyContacts(updatedContacts);
+            saveDepotLocation(updatedLocation);
+            
+            // Show success and return to view mode
+            alert('Emergency details saved!');
+            renderEmergencyModal(updatedContacts, updatedLocation, false);
+        }
+
+        function closeEmergencyModal() {
+            document.getElementById('cModal').remove();
         }
     </script>
 </body>
