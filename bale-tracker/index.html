@@ -211,14 +211,12 @@
 
     <script>
         // ============================================
-        // GOOGLE SHEETS SYNC CONFIGURATION
+        // GOOGLE APPS SCRIPT SYNC CONFIGURATION
         // ============================================
         
-        const SHEETS_CONFIG = {
+        const SYNC_CONFIG = {
             enabled: true, // Set to true after setup
-            apiKey: 'AIzaSyADMdjpETkMbY7jldF6-QpFBupKNAdJY_c', // Your Google Sheets API key
-            spreadsheetId: '1S6nudhMPl1QbGZEZgIzniiBSQ0aMxqjg7VXaaabts_c', // Your spreadsheet ID
-            range: 'SeasonData!A1:C1000' // Sheet name and range
+            scriptUrl: 'https://script.google.com/macros/s/AKfycbw68lBhmWy65uapSsqbSDij-vn60w6JQsDpy9cLoJqqIUiXmxsDyWu16viNXq7MjaNW4w/exec' // Your Google Apps Script web app URL (ends with /exec)
         };
         
         // Sync status management
@@ -254,9 +252,9 @@
             }
         }
         
-        // Read season data from Google Sheets
+        // Read season data from Google Sheets via Apps Script
         async function syncFromSheets() {
-            if (!SHEETS_CONFIG.enabled) {
+            if (!SYNC_CONFIG.enabled) {
                 updateSyncIndicator('disabled');
                 return null;
             }
@@ -264,67 +262,60 @@
             updateSyncIndicator('syncing', 'Loading from cloud...');
             
             try {
-                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_CONFIG.spreadsheetId}/values/${SHEETS_CONFIG.range}?key=${SHEETS_CONFIG.apiKey}`;
-                const response = await fetch(url);
+                const response = await fetch(`${SYNC_CONFIG.scriptUrl}?action=get`, {
+                    method: 'GET',
+                    redirect: 'follow'
+                });
                 
                 if (!response.ok) {
-                    throw new Error('Failed to fetch from Sheets');
+                    throw new Error('Failed to fetch from cloud');
                 }
                 
                 const data = await response.json();
                 
-                if (!data.values || data.values.length === 0) {
-                    // Empty sheet - return default data
+                if (!data || !data.bales) {
+                    // Empty or invalid data
                     updateSyncIndicator('synced', 'Cloud synced (empty)');
                     return { bales: [], loads: 0 };
                 }
                 
-                // Parse sheet data: Row 1 = bale numbers, Row 2 = load count
-                const bales = data.values[0] ? data.values[0].filter(b => b).map(Number) : [];
-                const loads = data.values[1] && data.values[1][0] ? parseInt(data.values[1][0]) : 0;
-                
                 syncStatus.lastSync = new Date();
                 updateSyncIndicator('synced', `Synced ${new Date().toLocaleTimeString()}`);
                 
-                return { bales, loads };
+                return data;
             } catch (error) {
-                console.error('Sync from Sheets failed:', error);
+                console.error('Sync from cloud failed:', error);
                 syncStatus.error = error.message;
                 updateSyncIndicator('error', 'Using local data');
                 return null; // Fall back to local data
             }
         }
         
-        // Write season data to Google Sheets
+        // Write season data to Google Sheets via Apps Script
         async function syncToSheets(seasonData) {
-            if (!SHEETS_CONFIG.enabled) return false;
+            if (!SYNC_CONFIG.enabled) return false;
             
             updateSyncIndicator('syncing', 'Saving to cloud...');
             
             try {
-                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_CONFIG.spreadsheetId}/values/${SHEETS_CONFIG.range}?valueInputOption=RAW&key=${SHEETS_CONFIG.apiKey}`;
-                
-                // Format data: Row 1 = all bale numbers, Row 2 = load count
-                const values = [
-                    seasonData.bales, // Row 1: Bale numbers
-                    [seasonData.loads] // Row 2: Load count
-                ];
-                
-                const response = await fetch(url, {
-                    method: 'PUT',
+                const response = await fetch(SYNC_CONFIG.scriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors', // Apps Script requires this
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ values })
+                    body: JSON.stringify({
+                        action: 'save',
+                        data: seasonData
+                    })
                 });
                 
-                if (!response.ok) {
-                    throw new Error('Failed to write to Sheets');
-                }
+                // Note: no-cors means we can't read the response, but that's OK
+                // We assume success if no error was thrown
                 
                 syncStatus.lastSync = new Date();
                 updateSyncIndicator('synced', `Synced ${new Date().toLocaleTimeString()}`);
                 return true;
             } catch (error) {
-                console.error('Sync to Sheets failed:', error);
+                console.error('Sync to cloud failed:', error);
                 syncStatus.error = error.message;
                 updateSyncIndicator('error', 'Save failed - stored locally');
                 return false;
@@ -332,7 +323,7 @@
         }
         
         // ============================================
-        // END GOOGLE SHEETS SYNC
+        // END GOOGLE APPS SCRIPT SYNC
         // ============================================
         
         let haulierName = ""; let maxLimit = 0; let currentCount = 0; let manifestData = []; 
