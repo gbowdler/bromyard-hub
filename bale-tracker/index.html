@@ -215,8 +215,8 @@
         // ============================================
         
         const SYNC_CONFIG = {
-            enabled: true, // Set to true after setup
-            scriptUrl: 'https://script.google.com/macros/s/AKfycbw68lBhmWy65uapSsqbSDij-vn60w6JQsDpy9cLoJqqIUiXmxsDyWu16viNXq7MjaNW4w/exec' // Your Google Apps Script web app URL (ends with /exec)
+            enabled: false, // Set to true after setup
+            scriptUrl: '' // Your Google Apps Script web app URL (ends with /exec)
         };
         
         // Sync status management
@@ -545,27 +545,50 @@
             const sortedData = [...manifestData].sort((a, b) => a.number - b.number);
             
             let csv = "Bale Number,Type,Reference\n" + sortedData.map(i => `${i.number},${i.type},${i.ref}`).join("\n");
-            const file = new File([csv], `Bale_Manifest_${new Date().toISOString().slice(0,10)}.csv`, { type: "text/csv" });
+            const fileName = `Bale_Manifest_${new Date().toISOString().slice(0,10)}.csv`;
             
-            // Clear temp state after successful share
+            // Clear temp state
             clearTempLoadState();
             
-            // Share the CSV file
+            // Try Web Share API with files
+            if (navigator.share && navigator.canShare) {
+                const file = new File([csv], fileName, { type: "text/csv" });
+                const shareData = { files: [file], title: "Bale Manifest" };
+                
+                // Check if we can share files
+                if (navigator.canShare(shareData)) {
+                    try {
+                        await navigator.share(shareData);
+                        return;
+                    } catch (error) {
+                        console.log('File share failed, trying text share:', error);
+                    }
+                }
+            }
+            
+            // Fallback: Try sharing as text
             if (navigator.share) {
                 try {
-                    await navigator.share({ files: [file], title: "Bale Manifest" });
-                    
-                    // Only create backup AFTER successful share
-                    await createBackup();
+                    await navigator.share({
+                        title: 'Bale Manifest',
+                        text: csv
+                    });
+                    return;
                 } catch (error) {
-                    console.error('Share failed:', error);
-                    // If share was cancelled or failed, still create backup
-                    await createBackup();
+                    console.log('Text share failed, downloading file:', error);
                 }
-            } else {
-                // No share API available, create backup
-                await createBackup();
             }
+            
+            // Final fallback: Download the file
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
         
         // Backup system
