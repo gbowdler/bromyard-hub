@@ -536,27 +536,30 @@
         async function finishAndShare() {
             if (manifestData.length === 0) return;
             
-            // Add current load bales to season permanently and sync to cloud
-            const baleNumbers = manifestData.map(item => item.number);
-            await addBalesToSeason(baleNumbers);
-            await incrementLoadCount();
-            
-            // Sort bales numerically before generating CSV
+            // Sort bales numerically and generate CSV immediately
             const sortedData = [...manifestData].sort((a, b) => a.number - b.number);
-            
             let csv = "Bale Number,Type,Reference\n" + sortedData.map(i => `${i.number},${i.type},${i.ref}`).join("\n");
             const file = new File([csv], `Bale_Manifest_${new Date().toISOString().slice(0,10)}.csv`, { type: "text/csv" });
             
             // Clear temp state
             clearTempLoadState();
             
-            // Share the CSV file (simple version)
+            // Show share dialog FIRST (don't wait for sync)
             if (navigator.share) {
-                await navigator.share({ 
-                    files: [file], 
-                    title: "Bale Manifest" 
-                });
+                try {
+                    await navigator.share({ 
+                        files: [file], 
+                        title: "Bale Manifest" 
+                    });
+                } catch (error) {
+                    console.log('Share cancelled or failed:', error);
+                }
             }
+            
+            // AFTER sharing (or cancelling), sync to cloud in background
+            const baleNumbers = manifestData.map(item => item.number);
+            await addBalesToSeason(baleNumbers);
+            await incrementLoadCount();
         }
         
         // Backup system
