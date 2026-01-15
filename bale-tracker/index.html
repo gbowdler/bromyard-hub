@@ -168,6 +168,9 @@
 
         <div id="entrySection" class="hidden">
             <div id="statusBar" class="status-bar">Loading: 0 / 0</div>
+            <div id="syncStatus" style="text-align: center; font-size: 0.7rem; color: #64748b; margin-bottom: 15px;">
+                <span id="syncIndicator">●</span> <span id="syncText">Checking sync...</span>
+            </div>
 
             <div class="input-group">
                 <div style="flex: 1.5;">
@@ -207,16 +210,155 @@
     </div>
 
     <script>
+        // ============================================
+        // GOOGLE SHEETS SYNC CONFIGURATION
+        // ============================================
+        
+        const SHEETS_CONFIG = {
+            enabled: true, // Set to true after setup
+            apiKey: 'AIzaSyADMdjpETkMbY7jldF6-QpFBupKNAdJY_c', // Your Google Sheets API key
+            spreadsheetId: '1S6nudhMPl1QbGZEZgIzniiBSQ0aMxqjg7VXaaabts_c', // Your spreadsheet ID
+            range: 'SeasonData!A1:C1000' // Sheet name and range
+        };
+        
+        // Sync status management
+        let syncStatus = {
+            lastSync: null,
+            syncing: false,
+            error: null
+        };
+        
+        function updateSyncIndicator(status, message) {
+            const indicator = document.getElementById('syncIndicator');
+            const text = document.getElementById('syncText');
+            
+            if (!indicator || !text) return;
+            
+            switch(status) {
+                case 'synced':
+                    indicator.style.color = '#10b981';
+                    text.textContent = message || 'Synced';
+                    break;
+                case 'syncing':
+                    indicator.style.color = '#eab308';
+                    text.textContent = message || 'Syncing...';
+                    break;
+                case 'error':
+                    indicator.style.color = '#ef4444';
+                    text.textContent = message || 'Offline - using local data';
+                    break;
+                case 'disabled':
+                    indicator.style.color = '#64748b';
+                    text.textContent = 'Sync disabled - local only';
+                    break;
+            }
+        }
+        
+        // Read season data from Google Sheets
+        async function syncFromSheets() {
+            if (!SHEETS_CONFIG.enabled) {
+                updateSyncIndicator('disabled');
+                return null;
+            }
+            
+            updateSyncIndicator('syncing', 'Loading from cloud...');
+            
+            try {
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_CONFIG.spreadsheetId}/values/${SHEETS_CONFIG.range}?key=${SHEETS_CONFIG.apiKey}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch from Sheets');
+                }
+                
+                const data = await response.json();
+                
+                if (!data.values || data.values.length === 0) {
+                    // Empty sheet - return default data
+                    updateSyncIndicator('synced', 'Cloud synced (empty)');
+                    return { bales: [], loads: 0 };
+                }
+                
+                // Parse sheet data: Row 1 = bale numbers, Row 2 = load count
+                const bales = data.values[0] ? data.values[0].filter(b => b).map(Number) : [];
+                const loads = data.values[1] && data.values[1][0] ? parseInt(data.values[1][0]) : 0;
+                
+                syncStatus.lastSync = new Date();
+                updateSyncIndicator('synced', `Synced ${new Date().toLocaleTimeString()}`);
+                
+                return { bales, loads };
+            } catch (error) {
+                console.error('Sync from Sheets failed:', error);
+                syncStatus.error = error.message;
+                updateSyncIndicator('error', 'Using local data');
+                return null; // Fall back to local data
+            }
+        }
+        
+        // Write season data to Google Sheets
+        async function syncToSheets(seasonData) {
+            if (!SHEETS_CONFIG.enabled) return false;
+            
+            updateSyncIndicator('syncing', 'Saving to cloud...');
+            
+            try {
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_CONFIG.spreadsheetId}/values/${SHEETS_CONFIG.range}?valueInputOption=RAW&key=${SHEETS_CONFIG.apiKey}`;
+                
+                // Format data: Row 1 = all bale numbers, Row 2 = load count
+                const values = [
+                    seasonData.bales, // Row 1: Bale numbers
+                    [seasonData.loads] // Row 2: Load count
+                ];
+                
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ values })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to write to Sheets');
+                }
+                
+                syncStatus.lastSync = new Date();
+                updateSyncIndicator('synced', `Synced ${new Date().toLocaleTimeString()}`);
+                return true;
+            } catch (error) {
+                console.error('Sync to Sheets failed:', error);
+                syncStatus.error = error.message;
+                updateSyncIndicator('error', 'Save failed - stored locally');
+                return false;
+            }
+        }
+        
+        // ============================================
+        // END GOOGLE SHEETS SYNC
+        // ============================================
+        
         let haulierName = ""; let maxLimit = 0; let currentCount = 0; let manifestData = []; 
         
         // Season tracking - stores all bales transported this season
-        function getSeasonData() {
-            const data = localStorage.getItem('baleTrackerSeason');
-            return data ? JSON.parse(data) : { bales: [], loads: 0 };
+        async function getSeasonData() {
+            // Try to sync from Sheets first
+            const cloudData = await syncFromSheets();
+            
+            if (cloudData !== null) {
+                // Successfully got data from cloud - also save to localStorage as backup
+                localStorage.setItem('baleTrackerSeason', JSON.stringify(cloudData));
+                return cloudData;
+            }
+            
+            // Fall back to localStorage if sync failed or disabled
+            const localData = localStorage.getItem('baleTrackerSeason');
+            return localData ? JSON.parse(localData) : { bales: [], loads: 0 };
         }
         
-        function saveSeasonData(seasonData) {
+        async function saveSeasonData(seasonData) {
+            // Save to localStorage immediately (fast, always works)
             localStorage.setItem('baleTrackerSeason', JSON.stringify(seasonData));
+            
+            // Then sync to cloud (slower, might fail)
+            await syncToSheets(seasonData);
         }
         
         // Temporary load state - for in-progress loads
@@ -254,31 +396,31 @@
             }
         }
         
-        function updateSeasonStats() {
-            const seasonData = getSeasonData();
+        async function updateSeasonStats() {
+            const seasonData = await getSeasonData();
             document.getElementById('seasonBaleCount').textContent = seasonData.bales.length;
             document.getElementById('seasonLoadCount').textContent = seasonData.loads;
         }
         
-        function addBalesToSeason(baleNumbers) {
-            const seasonData = getSeasonData();
+        async function addBalesToSeason(baleNumbers) {
+            const seasonData = await getSeasonData();
             baleNumbers.forEach(baleNum => {
                 if (!seasonData.bales.includes(baleNum)) {
                     seasonData.bales.push(baleNum);
                 }
             });
-            saveSeasonData(seasonData);
+            await saveSeasonData(seasonData);
         }
         
-        function incrementLoadCount() {
-            const seasonData = getSeasonData();
+        async function incrementLoadCount() {
+            const seasonData = await getSeasonData();
             seasonData.loads++;
-            saveSeasonData(seasonData);
-            updateSeasonStats();
+            await saveSeasonData(seasonData);
+            await updateSeasonStats();
         }
         
-        function isBaleInSeason(baleNumber) {
-            const seasonData = getSeasonData();
+        async function isBaleInSeason(baleNumber) {
+            const seasonData = await getSeasonData();
             return seasonData.bales.includes(baleNumber);
         }
 
@@ -315,7 +457,7 @@
             document.getElementById('refInputContainer').classList.toggle('hidden', size === '1');
         }
 
-        function addBale() {
+        async function addBale() {
             const numInput = document.getElementById('baleNumber');
             const baleNum = parseInt(numInput.value);
             if (isNaN(baleNum)) { alert("Invalid Bale #"); return; }
@@ -327,7 +469,7 @@
             }
             
             // Check if bale was transported earlier this season (completed loads only)
-            if (isBaleInSeason(baleNum)) {
+            if (await isBaleInSeason(baleNum)) {
                 showModal(`⚠️ Bale #${baleNum} was already transported this season!\n\nAdd anyway with DUPLICATE tag?`, () => {
                     addBaleToManifest(baleNum, true);
                 });
@@ -405,8 +547,8 @@
             
             // Add current load bales to season permanently
             const baleNumbers = manifestData.map(item => item.number);
-            addBalesToSeason(baleNumbers);
-            incrementLoadCount();
+            await addBalesToSeason(baleNumbers);
+            await incrementLoadCount();
             
             // Auto-backup after completing load
             createBackup();
@@ -424,8 +566,8 @@
         }
         
         // Backup system
-        function createBackup() {
-            const seasonData = getSeasonData();
+        async function createBackup() {
+            const seasonData = await getSeasonData();
             const backup = {
                 version: "1.0",
                 timestamp: new Date().toISOString(),
