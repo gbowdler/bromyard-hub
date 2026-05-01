@@ -1,0 +1,60 @@
+name: Confirm Load
+
+on:
+  workflow_dispatch:
+    inputs:
+      load_number:
+        description: 'Load number to confirm (e.g. 5)'
+        required: true
+        type: number
+
+jobs:
+  confirm:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Read state for haulier and date
+        id: state
+        run: |
+          HAULIER=$(python -c "import csv; rows=list(csv.DictReader(open('data/pending-manifest.csv'))); print(rows[0]['Haulier'] if rows else '')")
+          DATE=$(date +%d/%m/%Y)
+          # Collect bale numbers from the pending manifest
+          BALES=$(python -c "
+          import csv
+          rows = list(csv.DictReader(open('data/pending-manifest.csv')))
+          print(','.join(r['Bale Number'] for r in rows))
+          ")
+          echo "haulier=$HAULIER" >> $GITHUB_OUTPUT
+          echo "date=$DATE"       >> $GITHUB_OUTPUT
+          echo "bales=$BALES"     >> $GITHUB_OUTPUT
+
+      - name: Mark bales as transported and update state
+        run: |
+          python scripts/confirm_load.py \
+            --bale-log        data/bale-log.csv \
+            --bales           "${{ steps.state.outputs.bales }}" \
+            --load-number     ${{ inputs.load_number }} \
+            --haulier         "${{ steps.state.outputs.haulier }}" \
+            --date            "${{ steps.state.outputs.date }}" \
+            --state           data/packing-state.json \
+            --output-bale-log data/bale-log.csv \
+            --output-state    data/packing-state.json
+
+      - name: Commit updated data files
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/bale-log.csv data/packing-state.json
+          git commit -m "Confirm Load ${{ inputs.load_number }} — bales marked as transported"
+          git push

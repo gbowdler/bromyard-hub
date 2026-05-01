@@ -204,6 +204,7 @@
             <ul id="manifestList"></ul>
 
             <button type="button" class="btn-success" style="margin-top: 20px;" onclick="finishAndShare()">Share / Save CSV</button>
+            <p id="pipelineStatus" style="font-size: 0.85rem; color: var(--text-muted, #888); margin: 6px 0 0 0; min-height: 1.2em;"></p>
             <button type="button" class="btn-danger" style="margin-top: 20px; opacity: 0.6;" onclick="requestCancel()">Cancel Load</button>
             <button type="button" class="btn-danger" style="margin-top: 10px; opacity: 0.4; font-size: 14px;" onclick="requestSeasonReset()">🔄 Reset Season Data</button>
         </div>
@@ -533,30 +534,63 @@
             });
         }
 
+        // Cloudflare Worker — forwards manifest CSV to GitHub Actions pipeline
+        // Set both values after deploying the Worker (see cloudflare-worker/worker.js)
+        const WORKER_URL    = "REPLACE_WITH_WORKER_URL";
+        const WORKER_SECRET = "REPLACE_WITH_SHARED_SECRET";
+
+        async function sendToDepotPipeline(csv) {
+            // Fire-and-forget — share sheet already done, this runs in background
+            const statusEl = document.getElementById('pipelineStatus');
+            if (statusEl) statusEl.textContent = 'Sending to depot pipeline...';
+            try {
+                const resp = await fetch(WORKER_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/csv',
+                        'X-Api-Key': WORKER_SECRET
+                    },
+                    body: csv
+                });
+                if (resp.ok) {
+                    if (statusEl) statusEl.textContent = 'Sent to depot pipeline';
+                } else {
+                    console.warn('Depot pipeline returned', resp.status);
+                    if (statusEl) statusEl.textContent = 'Pipeline send failed — share the CSV manually';
+                }
+            } catch (err) {
+                console.warn('Depot pipeline unreachable:', err);
+                if (statusEl) statusEl.textContent = 'Pipeline send failed — share the CSV manually';
+            }
+        }
+
         async function finishAndShare() {
             if (manifestData.length === 0) return;
-            
+
             // Sort bales numerically and generate CSV immediately
             const sortedData = [...manifestData].sort((a, b) => a.number - b.number);
             // Include haulier name as final column so manifests are self-contained
             let csv = "Bale Number,Type,Reference,Haulier\n" + sortedData.map(i => `${i.number},${i.type},${i.ref},${haulierName}`).join("\n");
             const file = new File([csv], `Bale_Manifest_${new Date().toISOString().slice(0,10)}.csv`, { type: "text/csv" });
-            
+
             // Clear temp state
             clearTempLoadState();
-            
+
             // Show share dialog FIRST (don't wait for sync)
             if (navigator.share) {
                 try {
-                    await navigator.share({ 
-                        files: [file], 
-                        title: "Bale Manifest" 
+                    await navigator.share({
+                        files: [file],
+                        title: "Bale Manifest"
                     });
                 } catch (error) {
                     console.log('Share cancelled or failed:', error);
                 }
             }
-            
+
+            // Send CSV to depot pipeline in background (non-blocking)
+            sendToDepotPipeline(csv);
+
             // AFTER sharing (or cancelling), sync to cloud in background
             const baleNumbers = manifestData.map(item => item.number);
             await addBalesToSeason(baleNumbers);

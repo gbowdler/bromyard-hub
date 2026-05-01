@@ -1,0 +1,57 @@
+name: Generate Packing Sheet
+
+on:
+  push:
+    paths:
+      - 'data/pending-manifest.csv'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Read packing state
+        id: state
+        run: |
+          LOAD_NUM=$(python -c "import json; s=json.load(open('data/packing-state.json')); print(s['last_load_number'] + 1)")
+          PREV_TOTAL=$(python -c "import json; s=json.load(open('data/packing-state.json')); print(s['running_total_kg'])")
+          HAULIER=$(python -c "import csv; rows=list(csv.DictReader(open('data/pending-manifest.csv'))); print(rows[0]['Haulier'] if rows else '')")
+          DATE=$(date +%d/%m/%Y)
+          echo "load_num=$LOAD_NUM"     >> $GITHUB_OUTPUT
+          echo "prev_total=$PREV_TOTAL" >> $GITHUB_OUTPUT
+          echo "haulier=$HAULIER"       >> $GITHUB_OUTPUT
+          echo "date=$DATE"             >> $GITHUB_OUTPUT
+          echo "filename=Packing_Sheet_Load${LOAD_NUM}.xlsx" >> $GITHUB_OUTPUT
+
+      - name: Generate packing sheet
+        run: |
+          python scripts/generate_packing_sheet.py \
+            --manifest   data/pending-manifest.csv \
+            --bale-log   data/bale-log.csv \
+            --load-number ${{ steps.state.outputs.load_num }} \
+            --haulier    "${{ steps.state.outputs.haulier }}" \
+            --prev-total ${{ steps.state.outputs.prev_total }} \
+            --date       "${{ steps.state.outputs.date }}" \
+            --output     "data/output/${{ steps.state.outputs.filename }}"
+
+      - name: Commit packing sheet
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "data/output/${{ steps.state.outputs.filename }}"
+          git commit -m "Generate ${{ steps.state.outputs.filename }} (Load ${{ steps.state.outputs.load_num }}, ${{ steps.state.outputs.haulier }})"
+          git push
