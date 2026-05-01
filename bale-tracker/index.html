@@ -536,8 +536,8 @@
 
         // Cloudflare Worker — forwards manifest CSV to GitHub Actions pipeline
         // Set both values after deploying the Worker (see cloudflare-worker/worker.js)
-        const WORKER_URL    = "REPLACE_WITH_WORKER_URL";
-        const WORKER_SECRET = "REPLACE_WITH_SHARED_SECRET";
+        const WORKER_URL    = "https://bromyard-depot-pipeline.gbowdler-contact.workers.dev";
+        const WORKER_SECRET = "tGTF564%&(hgfsdmnh£D";
 
         async function sendToDepotPipeline(csv) {
             // Fire-and-forget — share sheet already done, this runs in background
