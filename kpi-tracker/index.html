@@ -195,6 +195,12 @@
         .modal h2 { margin: 0 0 14px; font-size: 1.05rem; color: var(--primary); }
 
         .hidden { display: none !important; }
+
+        .tpl-body {
+            font-size: 0.82rem; color: #e2e8f0; line-height: 1.5;
+            background: var(--bg); border-radius: 6px; padding: 10px 12px;
+            border-left: 3px solid var(--border);
+        }
     </style>
 </head>
 <body>
@@ -211,6 +217,7 @@
     <button class="tab-btn" onclick="switchTab('contacts', this)">Contacts</button>
     <button class="tab-btn" onclick="switchTab('cc', this)">CC Visits</button>
     <button class="tab-btn" onclick="switchTab('data', this)">Season Data</button>
+    <button class="tab-btn" onclick="switchTab('templates', this)">Templates</button>
     <button class="tab-btn" onclick="switchTab('settings', this)">Settings</button>
 </div>
 
@@ -316,6 +323,69 @@
     <div id="snapshotHistory"></div>
 </div>
 
+<!-- ════════════════════════════════════════════════════ TEMPLATES -->
+<div id="tab-templates" class="tab-content">
+    <p style="font-size:0.78rem;color:#94a3b8;margin-bottom:12px;">
+        Copy a template, personalise the <strong style="color:white;">[brackets]</strong>, then send. WhatsApp/text works best — short, personal, no pressure.
+    </p>
+
+    <div class="section-title">Retention — existing members</div>
+
+    <div class="card">
+        <div style="font-size:0.7rem;color:var(--primary);font-weight:700;margin-bottom:8px;text-transform:uppercase;">Pre-season check-in · WhatsApp / Text</div>
+        <div class="tpl-body" id="tpl1">Hi [Name], Gareth here from British Wool Bromyard. Just touching base ahead of shearing — is everything OK your end? Happy to sort collection whenever you're ready, just let me know roughly when suits.</div>
+        <button class="btn-small" style="margin-top:8px;" onclick="copyTpl('tpl1', this)">Copy</button>
+    </div>
+
+    <div class="card">
+        <div style="font-size:0.7rem;color:var(--primary);font-weight:700;margin-bottom:8px;text-transform:uppercase;">After a missed connection · WhatsApp / Text</div>
+        <div class="tpl-body" id="tpl2">Hi [Name], Gareth from BW Bromyard — tried to reach you earlier, no worries. Just checking in before shearing gets underway. Any questions or anything I can help with, just message back.</div>
+        <button class="btn-small" style="margin-top:8px;" onclick="copyTpl('tpl2', this)">Copy</button>
+    </div>
+
+    <div class="section-title">Recruitment — lapsed members</div>
+
+    <div class="card">
+        <div style="font-size:0.7rem;color:#c084fc;font-weight:700;margin-bottom:8px;text-transform:uppercase;">Re-engagement · WhatsApp / Text</div>
+        <div class="tpl-body" id="tpl3">Hi [Name], Gareth Bowdler here — Depot Manager at British Wool Bromyard. We haven't crossed paths for a while and I just wanted to reach out. If you're still running sheep and thinking about this year's clip, I'd be glad to help. No rush, just here if useful.</div>
+        <button class="btn-small" style="margin-top:8px;" onclick="copyTpl('tpl3', this)">Copy</button>
+    </div>
+
+    <div class="card">
+        <div style="font-size:0.7rem;color:#c084fc;font-weight:700;margin-bottom:8px;text-transform:uppercase;">Re-engagement · Letter / Postcard</div>
+        <div class="tpl-body" id="tpl4">Dear [Name], I wanted to get in touch personally to say the door is always open at Bromyard. If circumstances have changed and you'd consider bringing your clip in again this year, I'd be very glad to help with arrangements. Please feel free to call or message me directly on [your number]. — Gareth Bowdler, British Wool Bromyard.</div>
+        <button class="btn-small" style="margin-top:8px;" onclick="copyTpl('tpl4', this)">Copy</button>
+    </div>
+
+    <div class="section-title">Recruitment — new members</div>
+
+    <div class="card">
+        <div style="font-size:0.7rem;color:#c084fc;font-weight:700;margin-bottom:8px;text-transform:uppercase;">Via referral · WhatsApp / Text</div>
+        <div class="tpl-body" id="tpl5">Hi [Name], Gareth Bowdler here — Depot Manager at British Wool Bromyard. [Referrer] suggested I get in touch. Happy to explain how registration works or answer any questions, no obligation at all. Feel free to message back or give me a call.</div>
+        <button class="btn-small" style="margin-top:8px;" onclick="copyTpl('tpl5', this)">Copy</button>
+    </div>
+
+    <div class="card">
+        <div style="font-size:0.7rem;color:#c084fc;font-weight:700;margin-bottom:8px;text-transform:uppercase;">After show / event · Text</div>
+        <div class="tpl-body" id="tpl6">Hi [Name], good to meet you at [show/event] earlier. I'm Gareth, Depot Manager at British Wool Bromyard. Happy to send over some info on how the scheme works if that'd be useful — just let me know.</div>
+        <button class="btn-small" style="margin-top:8px;" onclick="copyTpl('tpl6', this)">Copy</button>
+    </div>
+
+    <div class="section-title">Volume Premium</div>
+
+    <div class="card">
+        <div style="font-size:0.7rem;color:var(--success);font-weight:700;margin-bottom:8px;text-transform:uppercase;">VP intro to non-VP member · WhatsApp / Text</div>
+        <div class="tpl-body" id="tpl7">Hi [Name], Gareth from BW Bromyard. I wanted to mention the Volume Premium rate — at your sort of clip size it can make a real difference per kg. Happy to run through what it'd mean in practice for you if you'd like, no pressure.</div>
+        <button class="btn-small" style="margin-top:8px;" onclick="copyTpl('tpl7', this)">Copy</button>
+    </div>
+
+    <div class="card">
+        <div style="font-size:0.7rem;color:var(--success);font-weight:700;margin-bottom:8px;text-transform:uppercase;">VP renewal check · WhatsApp / Text</div>
+        <div class="tpl-body" id="tpl8">Hi [Name], Gareth here from Bromyard. Just checking in on your VP status ahead of this season — want to make sure everything's in order so you get the premium rate. Let me know if there's anything to sort.</div>
+        <button class="btn-small" style="margin-top:8px;" onclick="copyTpl('tpl8', this)">Copy</button>
+    </div>
+</div>
+
 <!-- ════════════════════════════════════════════════════ SETTINGS -->
 <div id="tab-settings" class="tab-content">
     <div class="card">
@@ -368,10 +438,13 @@
 
         <label>Method</label>
         <select id="c_method">
+            <option value="whatsapp">WhatsApp / Text</option>
             <option value="visit">Farm Visit</option>
             <option value="call">Phone Call</option>
             <option value="email">Email</option>
-            <option value="letter">Letter / Post</option>
+            <option value="letter">Letter / Postcard</option>
+            <option value="show">Show / Event</option>
+            <option value="referral">Referral / Word of Mouth</option>
             <option value="other">Other</option>
         </select>
 
@@ -601,7 +674,7 @@ function switchTab(name, btn) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-' + name).classList.add('active');
     btn.classList.add('active');
-    ({ dashboard: renderDashboard, contacts: renderContacts, cc: renderCC, data: renderSnapHistory, settings: renderSettings })[name]?.();
+    ({ dashboard: renderDashboard, contacts: renderContacts, cc: renderCC, data: renderSnapHistory, settings: renderSettings, templates: () => {} })[name]?.();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1060,6 +1133,27 @@ function importData(event) {
     };
     reader.readAsText(file);
     event.target.value = '';
+}
+
+function copyTpl(id, btn) {
+    const text = document.getElementById(id).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = '✓ Copied';
+        btn.style.color = 'var(--success)';
+        btn.style.borderColor = 'var(--success)';
+        setTimeout(() => { btn.textContent = orig; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
+    }).catch(() => {
+        // Fallback for older browsers
+        const range = document.createRange();
+        range.selectNode(document.getElementById(id));
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+        document.execCommand('copy');
+        window.getSelection().removeAllRanges();
+        btn.textContent = '✓ Copied';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+    });
 }
 
 function clearAll() {
