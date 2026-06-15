@@ -296,10 +296,10 @@
             <div><label>Total Clip (kg)</label><input type="number" id="snap_total_kg" placeholder="e.g. 160000"></div>
         </div>
 
-        <div class="section-title">Collections</div>
+        <div class="section-title">Phone Answering (data from IT)</div>
         <div class="num-grid">
-            <div><label>Missed Calls</label><input type="number" id="snap_missed" placeholder="e.g. 12"></div>
-            <div><label>Total Attempts</label><input type="number" id="snap_total_calls" placeholder="e.g. 140"></div>
+            <div><label>Unanswered Calls</label><input type="number" id="snap_missed" placeholder="e.g. 7"></div>
+            <div><label>Total Calls Received</label><input type="number" id="snap_total_calls" placeholder="e.g. 90"></div>
         </div>
 
         <div class="section-title">Intake</div>
@@ -325,7 +325,7 @@
             <div><label>Retention Target (%)</label><input type="number" id="tgt_retention" step="0.1"></div>
             <div><label>Recruitment Target (%)</label><input type="number" id="tgt_recruitment" step="0.1"></div>
             <div><label>VP Rate Target (%)</label><input type="number" id="tgt_vp" step="0.1"></div>
-            <div><label>Max Missed Calls (%)</label><input type="number" id="tgt_missed" step="0.1"></div>
+            <div><label>Max Unanswered (%)</label><input type="number" id="tgt_missed" step="0.1"></div>
             <div><label>Intake Target (kg)</label><input type="number" id="tgt_intake"></div>
             <div><label>Min CC Operational</label><input type="number" id="tgt_cc_min"></div>
             <div><label>CC Visited Target (%)</label><input type="number" id="tgt_cc_visited" step="0.1"></div>
@@ -576,7 +576,7 @@ function calcKPIs(data) {
         retention:    { label: 'Retention',    value: retention,   target: t.retention_pct,        hib: true,  fmt: v => fmtVal(v) + '%',   targetStr: `Target ≥${t.retention_pct}%` },
         recruitment:  { label: 'Recruitment',  value: recruitment, target: t.recruitment_pct,      hib: true,  fmt: v => fmtVal(v) + '%',   targetStr: `Target ${t.recruitment_pct}%` },
         vp_rate:      { label: 'VP Rate',       value: vp_rate,     target: t.vp_rate_pct,          hib: true,  fmt: v => fmtVal(v) + '%',   targetStr: `Target ${t.vp_rate_pct}% of clip` },
-        missed_calls: { label: 'Missed Calls',  value: missed_pct,  target: t.missed_calls_max_pct, hib: false, fmt: v => fmtVal(v) + '%',   targetStr: `Target <${t.missed_calls_max_pct}%` },
+        missed_calls: { label: 'Unanswered Calls', value: missed_pct, target: t.missed_calls_max_pct, hib: false, fmt: v => fmtVal(v) + '%', targetStr: `Target <${t.missed_calls_max_pct}%` },
         intake:       { label: 'Intake',        value: intake,      target: t.intake_kg,            hib: true,  fmt: v => fmtKg(v) + 'kg',  targetStr: `Target ${fmtKg(t.intake_kg)}kg` },
         cc_op:        { label: 'CC Operational',value: opCount || (ccNames.length ? 0 : null), target: t.cc_min_operational, hib: true, fmt: v => String(v), targetStr: `Target ≥${t.cc_min_operational}` },
         cc_vis:       { label: 'CC Visited %',  value: cc_vis_pct,  target: t.cc_visited_pct,       hib: true,  fmt: v => fmtVal(v, 0) + '%', targetStr: `Target ${t.cc_visited_pct}% (of ${t.cc_total_in_catchment})` }
@@ -967,7 +967,7 @@ function renderSnapHistory() {
                 <div><span style="color:#94a3b8;">Retention:</span> ${ret !== null ? fmtVal(ret)+'%' : '–'}</div>
                 <div><span style="color:#94a3b8;">Recruitment:</span> ${rec !== null ? fmtVal(rec)+'%' : '–'}</div>
                 <div><span style="color:#94a3b8;">VP Rate:</span> ${vp !== null ? fmtVal(vp)+'%' : '–'}</div>
-                <div><span style="color:#94a3b8;">Missed Calls:</span> ${mc !== null ? fmtVal(mc)+'%' : '–'}</div>
+                <div><span style="color:#94a3b8;">Unanswered:</span> ${mc !== null ? fmtVal(mc)+'%' : '–'}</div>
                 <div><span style="color:#94a3b8;">Intake:</span> ${fmtKg(s.intake_kg)}kg</div>
                 <div><span style="color:#94a3b8;">Base members:</span> ${s.members_last_year || '–'}</div>
             </div>
