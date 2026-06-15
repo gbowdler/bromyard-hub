@@ -258,7 +258,7 @@
             <option value="at_risk">At Risk</option>
             <option value="new">New Member</option>
             <option value="returning">Returning</option>
-            <option value="vp_signed">VP Signed</option>
+            <option value="vp_signed">VP Confirmed</option>
             <option value="interested">Interested</option>
             <option value="no_contact">No Contact</option>
             <option value="lapsed">Lost/Lapsed</option>
@@ -298,6 +298,7 @@
         </div>
 
         <div class="section-title">Volume Premium</div>
+        <p style="font-size:0.72rem;color:#94a3b8;margin-bottom:8px;">VP is automatic above 2,000kg — enter kg from members qualifying for VP vs total depot clip.</p>
         <div class="num-grid">
             <div><label>VP Clip (kg)</label><input type="number" id="snap_vp_kg" placeholder="e.g. 45000"></div>
             <div><label>Total Clip (kg)</label><input type="number" id="snap_total_kg" placeholder="e.g. 160000"></div>
@@ -366,8 +367,8 @@
     </div>
 
     <div class="card">
-        <div style="font-size:0.7rem;color:var(--warning);font-weight:700;margin-bottom:8px;text-transform:uppercase;">VP invitation · Non-VP members · Oct/Nov</div>
-        <div class="tpl-body" id="tplC2">Are you currently on the Volume Premium rate? For many producers it can make a significant difference to returns per kg — and it's simpler to sign up than you might think. If you'd like to understand what it would mean for your clip, please get in touch directly. — Gareth Bowdler, Depot Manager, British Wool Bromyard. [phone]</div>
+        <div style="font-size:0.7rem;color:var(--warning);font-weight:700;margin-bottom:8px;text-transform:uppercase;">VP threshold reminder · Members near 2t · Oct/Nov</div>
+        <div class="tpl-body" id="tplC2">Did you know that Volume Premium is applied automatically to your clip once it reaches 2,000kg? There's nothing to sign up for — if your clip hits the threshold, you receive the premium rate. If you're close to that level, or if you have wool going through other routes, it may be worth consolidating your clip at Bromyard. Happy to chat through what that might look like. — Gareth Bowdler, Depot Manager, British Wool Bromyard. [phone]</div>
         <button class="btn-small" style="margin-top:8px;" onclick="copyTpl('tplC2', this)">Copy</button>
     </div>
 
@@ -406,14 +407,14 @@
     <div class="section-title">Volume Premium</div>
 
     <div class="card">
-        <div style="font-size:0.7rem;color:var(--success);font-weight:700;margin-bottom:8px;text-transform:uppercase;">VP intro to non-VP member · WhatsApp / Text</div>
-        <div class="tpl-body" id="tpl7">Hi [Name], Gareth from BW Bromyard. I wanted to mention the Volume Premium rate — at your sort of clip size it can make a real difference per kg. Happy to run through what it'd mean in practice for you if you'd like, no pressure.</div>
+        <div style="font-size:0.7rem;color:var(--success);font-weight:700;margin-bottom:8px;text-transform:uppercase;">VP threshold — near-miss member · WhatsApp / Text</div>
+        <div class="tpl-body" id="tpl7">Hi [Name], Gareth from BW Bromyard. Just a heads up — the Volume Premium kicks in automatically at 2 tonnes, and if your clip this year is likely to be close to that, it might be worth making sure it all comes through Bromyard rather than being split. Happy to chat if useful, no pressure.</div>
         <button class="btn-small" style="margin-top:8px;" onclick="copyTpl('tpl7', this)">Copy</button>
     </div>
 
     <div class="card">
-        <div style="font-size:0.7rem;color:var(--success);font-weight:700;margin-bottom:8px;text-transform:uppercase;">VP renewal check · WhatsApp / Text</div>
-        <div class="tpl-body" id="tpl8">Hi [Name], Gareth here from Bromyard. Just checking in on your VP status ahead of this season — want to make sure everything's in order so you get the premium rate. Let me know if there's anything to sort.</div>
+        <div style="font-size:0.7rem;color:var(--success);font-weight:700;margin-bottom:8px;text-transform:uppercase;">VP high-volume retention check · WhatsApp / Text</div>
+        <div class="tpl-body" id="tpl8">Hi [Name], Gareth here from Bromyard. Just touching base ahead of shearing — want to make sure we've got everything lined up your end so your clip comes through smoothly and you get your Volume Premium as usual. Any questions or timing to sort, just let me know.</div>
         <button class="btn-small" style="margin-top:8px;" onclick="copyTpl('tpl8', this)">Copy</button>
     </div>
 </div>
@@ -608,10 +609,10 @@ const OUTCOMES = {
         { v: 'other',      l: 'Other' }
     ],
     vp: [
-        { v: 'vp_signed',   l: 'VP signed / confirmed' },
-        { v: 'confirmed',   l: 'Already on VP — confirmed' },
-        { v: 'interested',  l: 'Interested — follow up' },
-        { v: 'vp_declined', l: 'Declined VP' },
+        { v: 'vp_signed',   l: 'VP confirmed — clip above threshold' },
+        { v: 'confirmed',   l: 'High-volume — clip consolidating here' },
+        { v: 'interested',  l: 'Near threshold — follow up' },
+        { v: 'vp_declined', l: 'Splitting clip / going elsewhere' },
         { v: 'no_contact',  l: 'Could not reach' },
         { v: 'other',       l: 'Other' }
     ],
