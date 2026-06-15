@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BW - KPI Tracker</title>
+    <style>
+        :root {
+            --primary: #10b981;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --border: #334155;
+            --muted: #64748b;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            overscroll-behavior-y: none;
+        }
+
+        .back-link {
+            position: fixed; top: 15px; right: 15px;
+            background: var(--card); color: var(--primary);
+            padding: 8px 12px; border-radius: 8px; font-size: 0.85rem;
+            font-weight: bold; text-decoration: none; border: 1px solid var(--border);
+            z-index: 1000;
+        }
+
+        header {
+            padding: 18px 20px 8px;
+            text-align: center;
+        }
+        header h1 { font-size: 1.6rem; margin: 0; color: white; }
+        header p { font-size: 1rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.15em; margin: 3px 0 0; }
+
+        /* ── Tab bar ── */
+        .tab-bar {
+            display: flex; gap: 4px;
+            padding: 10px 14px 12px;
+            overflow-x: auto; scrollbar-width: none;
+        }
+        .tab-bar::-webkit-scrollbar { display: none; }
+        .tab-btn {
+            flex: 1 1 auto; min-width: 64px;
+            padding: 9px 8px;
+            background: var(--card); color: var(--muted);
+            border: 1px solid var(--border); border-radius: 8px;
+            font-size: 0.72rem; font-weight: 700; cursor: pointer;
+            white-space: nowrap; text-align: center; transition: all 0.15s;
+        }
+        .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* ── Content ── */
+        .tab-content { display: none; padding: 0 14px 90px; }
+        .tab-content.active { display: block; }
+
+        /* ── Cards ── */
+        .card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 14px; margin-bottom: 10px;
+        }
+
+        /* ── KPI grid ── */
+        .kpi-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 8px; margin-bottom: 10px;
+        }
+        .kpi-card {
+            background: var(--card); border-radius: 12px; padding: 13px 11px;
+            border-left: 4px solid var(--border);
+        }
+        .kpi-card.green { border-left-color: var(--success); }
+        .kpi-card.amber { border-left-color: var(--warning); }
+        .kpi-card.red   { border-left-color: var(--danger); }
+        .kpi-card.grey  { border-left-color: var(--muted); }
+
+        .kpi-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 3px; }
+        .kpi-value { font-size: 1.55rem; font-weight: 800; line-height: 1; }
+        .kpi-card.green .kpi-value { color: var(--success); }
+        .kpi-card.amber .kpi-value { color: var(--warning); }
+        .kpi-card.red   .kpi-value { color: var(--danger); }
+        .kpi-card.grey  .kpi-value { color: var(--muted); }
+        .kpi-target { font-size: 0.68rem; color: var(--muted); margin-top: 4px; }
+
+        /* ── Forms ── */
+        label {
+            display: block; margin-bottom: 4px;
+            font-weight: 600; font-size: 0.75rem;
+            color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        input, select, textarea {
+            width: 100%; padding: 11px 13px; margin-bottom: 11px;
+            border: 1px solid var(--border); border-radius: 8px;
+            background: var(--bg); color: white;
+            font-size: 16px; font-family: inherit; box-sizing: border-box;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+        textarea { resize: vertical; min-height: 56px; font-size: 14px; }
+
+        button { cursor: pointer; font-family: inherit; transition: all 0.15s; }
+
+        .btn-primary {
+            width: 100%; padding: 13px; border: none; border-radius: 10px;
+            background: var(--primary); color: white;
+            font-size: 15px; font-weight: bold; margin-bottom: 8px;
+        }
+        .btn-secondary {
+            width: 100%; padding: 11px; border: 1px solid var(--border); border-radius: 10px;
+            background: var(--card); color: white;
+            font-size: 13px; font-weight: 600; margin-bottom: 8px;
+        }
+        .btn-danger {
+            padding: 6px 12px; border: none; border-radius: 6px;
+            background: var(--danger); color: white;
+            font-size: 11px; font-weight: bold;
+        }
+        .btn-small {
+            padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px;
+            background: var(--card); color: #94a3b8;
+            font-size: 11px; font-weight: 600;
+        }
+
+        /* ── Section titles ── */
+        .section-title {
+            font-size: 0.68rem; text-transform: uppercase; color: var(--muted);
+            margin: 14px 0 7px; letter-spacing: 0.1em; font-weight: 700;
+        }
+
+        /* ── Status banner ── */
+        .status-banner {
+            background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25);
+            border-radius: 8px; padding: 9px 13px; margin-bottom: 10px;
+            font-size: 0.78rem; color: #94a3b8;
+        }
+
+        /* ── Contact log items ── */
+        .log-item {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 8px; padding: 11px; margin-bottom: 7px;
+        }
+        .log-item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
+        .log-item-ref { font-weight: 700; font-size: 0.95rem; }
+        .log-item-date { font-size: 0.72rem; color: var(--muted); }
+        .log-item-meta { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 3px; }
+
+        .tag {
+            font-size: 0.62rem; font-weight: 700; padding: 2px 7px; border-radius: 20px;
+            text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .tag-retention   { background: rgba(59,130,246,0.2);  color: #60a5fa; }
+        .tag-recruitment { background: rgba(168,85,247,0.2);  color: #c084fc; }
+        .tag-vp          { background: rgba(16,185,129,0.2);  color: #34d399; }
+        .tag-cc          { background: rgba(245,158,11,0.2);  color: #fbbf24; }
+        .tag-general     { background: rgba(100,116,139,0.2); color: #94a3b8; }
+
+        .outcome-confirmed, .outcome-new, .outcome-returning, .outcome-vp_signed { color: var(--success); font-weight: 600; font-size: 0.78rem; }
+        .outcome-at_risk, .outcome-interested { color: var(--warning); font-weight: 600; font-size: 0.78rem; }
+        .outcome-lapsed, .outcome-vp_declined, .outcome-no_contact { color: var(--danger); font-weight: 600; font-size: 0.78rem; }
+        .outcome-other { color: var(--muted); font-size: 0.78rem; }
+
+        .log-notes { font-size: 0.78rem; color: #94a3b8; margin-top: 3px; }
+        .follow-up-badge { font-size: 0.68rem; background: rgba(245,158,11,0.12); color: #fbbf24; padding: 2px 7px; border-radius: 4px; display: inline-block; margin-top: 4px; }
+
+        /* ── CC status ── */
+        .cc-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .cc-dot.op  { background: var(--success); }
+        .cc-dot.nop { background: var(--danger); }
+
+        /* ── Number grid ── */
+        .num-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.88); z-index: 9999;
+            justify-content: center; align-items: center; padding: 14px;
+            overflow-y: auto;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 18px; width: 100%; max-width: 420px;
+            max-height: 92vh; overflow-y: auto;
+        }
+        .modal h2 { margin: 0 0 14px; font-size: 1.05rem; color: var(--primary); }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<a href="../index.html" class="back-link">← Hub</a>
+
+<header>
+    <h1>KPI Tracker</h1>
+    <p>2026/27 Season</p>
+</header>
+
+<div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('dashboard', this)">Dashboard</button>
+    <button class="tab-btn" onclick="switchTab('contacts', this)">Contacts</button>
+    <button class="tab-btn" onclick="switchTab('cc', this)">CC Visits</button>
+    <button class="tab-btn" onclick="switchTab('data', this)">Season Data</button>
+    <button class="tab-btn" onclick="switchTab('settings', this)">Settings</button>
+</div>
+
+<!-- ════════════════════════════════════════════════════ DASHBOARD -->
+<div id="tab-dashboard" class="tab-content active">
+    <div id="snapshotBanner" class="status-banner">
+        No data yet — tap <strong>Season Data</strong> to log your first snapshot.
+    </div>
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <div class="card">
+        <div class="section-title">Follow-ups Due</div>
+        <div id="followUpList"><span style="color:var(--muted);font-size:0.82rem;">No follow-ups pending.</span></div>
+    </div>
+
+    <div class="card">
+        <div class="section-title">Recent Contacts</div>
+        <div id="recentActivity"><span style="color:var(--muted);font-size:0.82rem;">No contacts logged yet.</span></div>
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════ CONTACTS -->
+<div id="tab-contacts" class="tab-content">
+    <button class="btn-primary" onclick="openContactModal()">+ Log Contact</button>
+
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+        <select id="filterCat" onchange="renderContacts()" style="flex:1;margin-bottom:0;font-size:13px;padding:9px;">
+            <option value="">All KPIs</option>
+            <option value="retention">Retention</option>
+            <option value="recruitment">Recruitment</option>
+            <option value="vp">VP Rate</option>
+            <option value="cc">CC</option>
+            <option value="general">General</option>
+        </select>
+        <select id="filterOut" onchange="renderContacts()" style="flex:1;margin-bottom:0;font-size:13px;padding:9px;">
+            <option value="">All Outcomes</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="at_risk">At Risk</option>
+            <option value="new">New Member</option>
+            <option value="returning">Returning</option>
+            <option value="vp_signed">VP Signed</option>
+            <option value="interested">Interested</option>
+            <option value="no_contact">No Contact</option>
+            <option value="lapsed">Lost/Lapsed</option>
+        </select>
+    </div>
+
+    <div id="contactsList"></div>
+</div>
+
+<!-- ════════════════════════════════════════════════════ CC VISITS -->
+<div id="tab-cc" class="tab-content">
+    <div class="card">
+        <div class="kpi-grid" id="ccKpiGrid"></div>
+    </div>
+    <button class="btn-primary" onclick="openCCModal()">+ Log CC Visit</button>
+    <div id="ccList"></div>
+</div>
+
+<!-- ════════════════════════════════════════════════════ SEASON DATA -->
+<div id="tab-data" class="tab-content">
+    <div class="card">
+        <div class="section-title">Enter Season Snapshot</div>
+        <p style="font-size:0.78rem;color:#94a3b8;margin-bottom:12px;">
+            Extract figures from the BW wool system and enter them here periodically.
+            All fields optional — fill in what you have.
+        </p>
+
+        <label>Snapshot Date</label>
+        <input type="date" id="snap_date">
+
+        <div class="section-title">Membership</div>
+        <div class="num-grid">
+            <div><label>Members Last Year</label><input type="number" id="snap_last_year" placeholder="e.g. 145"></div>
+            <div><label>Retained This Year</label><input type="number" id="snap_retained" placeholder="e.g. 130"></div>
+            <div><label>New Members</label><input type="number" id="snap_new" placeholder="e.g. 5"></div>
+            <div><label>Returning Members</label><input type="number" id="snap_returning" placeholder="e.g. 3"></div>
+        </div>
+
+        <div class="section-title">Volume Premium</div>
+        <div class="num-grid">
+            <div><label>VP Clip (kg)</label><input type="number" id="snap_vp_kg" placeholder="e.g. 45000"></div>
+            <div><label>Total Clip (kg)</label><input type="number" id="snap_total_kg" placeholder="e.g. 160000"></div>
+        </div>
+
+        <div class="section-title">Collections</div>
+        <div class="num-grid">
+            <div><label>Missed Calls</label><input type="number" id="snap_missed" placeholder="e.g. 12"></div>
+            <div><label>Total Attempts</label><input type="number" id="snap_total_calls" placeholder="e.g. 140"></div>
+        </div>
+
+        <div class="section-title">Intake</div>
+        <label>Total Intake to Depot (kg)</label>
+        <input type="number" id="snap_intake_kg" placeholder="e.g. 280000">
+
+        <label>Notes</label>
+        <textarea id="snap_notes" placeholder="e.g. 'End of June check — VP push started'"></textarea>
+
+        <button class="btn-primary" onclick="saveSnapshot()">Save Snapshot</button>
+    </div>
+
+    <div class="section-title">Snapshot History</div>
+    <div id="snapshotHistory"></div>
+</div>
+
+<!-- ════════════════════════════════════════════════════ SETTINGS -->
+<div id="tab-settings" class="tab-content">
+    <div class="card">
+        <div class="section-title">KPI Targets</div>
+        <p style="font-size:0.78rem;color:#94a3b8;margin-bottom:12px;">Adjust if targets change mid-year.</p>
+        <div class="num-grid">
+            <div><label>Retention Target (%)</label><input type="number" id="tgt_retention" step="0.1"></div>
+            <div><label>Recruitment Target (%)</label><input type="number" id="tgt_recruitment" step="0.1"></div>
+            <div><label>VP Rate Target (%)</label><input type="number" id="tgt_vp" step="0.1"></div>
+            <div><label>Max Missed Calls (%)</label><input type="number" id="tgt_missed" step="0.1"></div>
+            <div><label>Intake Target (kg)</label><input type="number" id="tgt_intake"></div>
+            <div><label>Min CC Operational</label><input type="number" id="tgt_cc_min"></div>
+            <div><label>CC Visited Target (%)</label><input type="number" id="tgt_cc_visited" step="0.1"></div>
+            <div><label>Total CCs in Catchment</label><input type="number" id="tgt_cc_total"></div>
+        </div>
+        <button class="btn-primary" onclick="saveTargets()">Save Targets</button>
+    </div>
+
+    <div class="card">
+        <div class="section-title">Data Management</div>
+        <button class="btn-secondary" onclick="exportJSON()">Export All Data (JSON)</button>
+        <button class="btn-secondary" onclick="exportCSV()">Export Contacts (CSV)</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+        <button class="btn-secondary" onclick="document.getElementById('importFile').click()">Import Backup (JSON)</button>
+        <button onclick="clearAll()" style="width:100%;padding:11px;border:1px solid var(--danger);border-radius:10px;background:transparent;color:var(--danger);font-size:13px;font-weight:600;margin-bottom:8px;cursor:pointer;">Clear All Data</button>
+        <p style="font-size:0.7rem;color:var(--muted);margin:0;">All data is stored locally on this device only.</p>
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════ CONTACT MODAL -->
+<div class="modal-overlay" id="contactModal">
+    <div class="modal">
+        <h2 id="contactModalTitle">Log Member Contact</h2>
+        <input type="hidden" id="edit_contact_id">
+
+        <label>Date</label>
+        <input type="date" id="c_date">
+
+        <label>Member Ref (your own code)</label>
+        <input type="text" id="c_ref" placeholder="e.g. M42 or initials" maxlength="30" autocomplete="off">
+
+        <label>KPI Category</label>
+        <select id="c_category" onchange="refreshOutcomeOptions()">
+            <option value="retention">Retention</option>
+            <option value="recruitment">Recruitment</option>
+            <option value="vp">VP Rate</option>
+            <option value="cc">Collection Centre</option>
+            <option value="general">General</option>
+        </select>
+
+        <label>Method</label>
+        <select id="c_method">
+            <option value="visit">Farm Visit</option>
+            <option value="call">Phone Call</option>
+            <option value="email">Email</option>
+            <option value="letter">Letter / Post</option>
+            <option value="other">Other</option>
+        </select>
+
+        <label>Outcome</label>
+        <select id="c_outcome"></select>
+
+        <label>Notes (optional)</label>
+        <textarea id="c_notes" placeholder="Brief note..."></textarea>
+
+        <label>Follow-up Date (optional)</label>
+        <input type="date" id="c_followup">
+
+        <button class="btn-primary" onclick="saveContact()">Save</button>
+        <button class="btn-secondary" onclick="closeContactModal()">Cancel</button>
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════ CC MODAL -->
+<div class="modal-overlay" id="ccModal">
+    <div class="modal">
+        <h2>Log CC Visit</h2>
+        <input type="hidden" id="edit_cc_id">
+
+        <label>Date</label>
+        <input type="date" id="cc_date">
+
+        <label>Collection Centre Name</label>
+        <input type="text" id="cc_name" placeholder="e.g. Ledbury CC" autocomplete="off">
+
+        <label>Operational?</label>
+        <select id="cc_operational">
+            <option value="true">Yes — fully operational</option>
+            <option value="false">No — not operational</option>
+        </select>
+
+        <label>Documentation Completed?</label>
+        <select id="cc_documented">
+            <option value="true">Yes — visit documented</option>
+            <option value="false">No — not yet documented</option>
+        </select>
+
+        <label>Notes (optional)</label>
+        <textarea id="cc_notes" placeholder="Issues, actions, observations..."></textarea>
+
+        <button class="btn-primary" onclick="saveCCVisit()">Save Visit</button>
+        <button class="btn-secondary" onclick="closeCCModal()">Cancel</button>
+    </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// DATA MODEL
+// ─────────────────────────────────────────────────────────────────────────────
+
+const STORE = 'bromyard_kpi_data';
+
+const DEFAULTS = {
+    season: '2026/27',
+    targets: {
+        retention_pct:        89,
+        recruitment_pct:      11.5,
+        vp_rate_pct:          28,
+        missed_calls_max_pct: 9,
+        intake_kg:            635000,
+        cc_min_operational:   3,
+        cc_visited_pct:       95,
+        cc_total_in_catchment: 10
+    },
+    snapshots:  [],
+    contacts:   [],
+    cc_visits:  []
+};
+
+function load() {
+    try {
+        const raw = localStorage.getItem(STORE);
+        if (!raw) return deep(DEFAULTS);
+        const d = JSON.parse(raw);
+        return { ...deep(DEFAULTS), ...d, targets: { ...DEFAULTS.targets, ...(d.targets || {}) } };
+    } catch (_) { return deep(DEFAULTS); }
+}
+
+function save(data) { localStorage.setItem(STORE, JSON.stringify(data)); }
+function deep(o)    { return JSON.parse(JSON.stringify(o)); }
+function uid()      { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function isoToday() { return new Date().toISOString().slice(0, 10); }
+
+function fmt(iso) {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+}
+
+function pct(n, d, dec = 1) {
+    if (!d || isNaN(n) || isNaN(d)) return null;
+    return parseFloat(((n / d) * 100).toFixed(dec));
+}
+
+function fmtKg(v) {
+    if (v === null || v === undefined || isNaN(v)) return '–';
+    return v >= 1000 ? Math.round(v / 1000) + 'k' : String(v);
+}
+
+function fmtVal(v, dec = 1) {
+    if (v === null || v === undefined || isNaN(v)) return '–';
+    return Number(v).toFixed(dec);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OUTCOME OPTIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+const OUTCOMES = {
+    retention: [
+        { v: 'confirmed',  l: 'Confirmed returning' },
+        { v: 'at_risk',    l: 'At risk — follow up' },
+        { v: 'lapsed',     l: 'Lost / not returning' },
+        { v: 'interested', l: 'Uncertain — follow up' },
+        { v: 'no_contact', l: 'Could not reach' },
+        { v: 'other',      l: 'Other' }
+    ],
+    recruitment: [
+        { v: 'new',        l: 'New member signed' },
+        { v: 'returning',  l: 'Returning member signed' },
+        { v: 'interested', l: 'Interested — follow up' },
+        { v: 'lapsed',     l: 'Declined — not interested' },
+        { v: 'no_contact', l: 'Could not reach' },
+        { v: 'other',      l: 'Other' }
+    ],
+    vp: [
+        { v: 'vp_signed',   l: 'VP signed / confirmed' },
+        { v: 'confirmed',   l: 'Already on VP — confirmed' },
+        { v: 'interested',  l: 'Interested — follow up' },
+        { v: 'vp_declined', l: 'Declined VP' },
+        { v: 'no_contact',  l: 'Could not reach' },
+        { v: 'other',       l: 'Other' }
+    ],
+    cc: [
+        { v: 'confirmed',  l: 'Operational — documented' },
+        { v: 'at_risk',    l: 'Issues to resolve' },
+        { v: 'lapsed',     l: 'Not operational' },
+        { v: 'interested', l: 'Possible new CC — follow up' },
+        { v: 'other',      l: 'Other' }
+    ],
+    general: [
+        { v: 'confirmed',  l: 'Positive / completed' },
+        { v: 'interested', l: 'Ongoing — follow up' },
+        { v: 'at_risk',    l: 'Concern raised' },
+        { v: 'no_contact', l: 'No contact made' },
+        { v: 'other',      l: 'Other' }
+    ]
+};
+
+function outcomeLabel(cat, val) {
+    const opts = OUTCOMES[cat] || OUTCOMES.general;
+    const o = opts.find(x => x.v === val);
+    return o ? o.l : val;
+}
+
+function refreshOutcomeOptions() {
+    const cat = document.getElementById('c_category').value;
+    const sel = document.getElementById('c_outcome');
+    sel.innerHTML = (OUTCOMES[cat] || OUTCOMES.general).map(o => `<option value="${o.v}">${o.l}</option>`).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KPI CALCULATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+function latestSnap(data) {
+    if (!data.snapshots.length) return null;
+    return [...data.snapshots].sort((a, b) => b.date.localeCompare(a.date))[0];
+}
+
+function calcKPIs(data) {
+    const s = latestSnap(data);
+    const t = data.targets;
+
+    const retention   = s ? pct(s.members_retained, s.members_last_year) : null;
+    const recruitment = s ? pct((+s.members_new) + (+s.members_returning), s.members_last_year) : null;
+    const vp_rate     = s ? pct(s.vp_kg, s.total_kg) : null;
+    const missed_pct  = s ? pct(s.missed_calls, s.total_calls) : null;
+    const intake      = s ? +s.intake_kg : null;
+
+    // CC metrics from visit log
+    const byCC = {};
+    data.cc_visits.forEach(v => {
+        if (!byCC[v.cc_name]) byCC[v.cc_name] = [];
+        byCC[v.cc_name].push(v);
+    });
+    const ccNames = Object.keys(byCC);
+    let opCount = 0, docsCount = 0;
+    ccNames.forEach(name => {
+        const sorted = [...byCC[name]].sort((a, b) => b.date.localeCompare(a.date));
+        const latest = sorted[0];
+        if (latest.operational === true || latest.operational === 'true') opCount++;
+        if (sorted.some(v => v.documented === true || v.documented === 'true')) docsCount++;
+    });
+    const cc_vis_pct = t.cc_total_in_catchment > 0 ? pct(docsCount, t.cc_total_in_catchment, 0) : null;
+
+    return {
+        retention:    { label: 'Retention',    value: retention,   target: t.retention_pct,        hib: true,  fmt: v => fmtVal(v) + '%',   targetStr: `Target ≥${t.retention_pct}%` },
+        recruitment:  { label: 'Recruitment',  value: recruitment, target: t.recruitment_pct,      hib: true,  fmt: v => fmtVal(v) + '%',   targetStr: `Target ${t.recruitment_pct}%` },
+        vp_rate:      { label: 'VP Rate',       value: vp_rate,     target: t.vp_rate_pct,          hib: true,  fmt: v => fmtVal(v) + '%',   targetStr: `Target ${t.vp_rate_pct}% of clip` },
+        missed_calls: { label: 'Missed Calls',  value: missed_pct,  target: t.missed_calls_max_pct, hib: false, fmt: v => fmtVal(v) + '%',   targetStr: `Target <${t.missed_calls_max_pct}%` },
+        intake:       { label: 'Intake',        value: intake,      target: t.intake_kg,            hib: true,  fmt: v => fmtKg(v) + 'kg',  targetStr: `Target ${fmtKg(t.intake_kg)}kg` },
+        cc_op:        { label: 'CC Operational',value: opCount || (ccNames.length ? 0 : null), target: t.cc_min_operational, hib: true, fmt: v => String(v), targetStr: `Target ≥${t.cc_min_operational}` },
+        cc_vis:       { label: 'CC Visited %',  value: cc_vis_pct,  target: t.cc_visited_pct,       hib: true,  fmt: v => fmtVal(v, 0) + '%', targetStr: `Target ${t.cc_visited_pct}% (of ${t.cc_total_in_catchment})` }
+    };
+}
+
+function rag(kpi) {
+    const { value, target, hib } = kpi;
+    if (value === null || value === undefined) return 'grey';
+    const ratio = hib ? value / target : target / value;
+    if (ratio >= 1)    return 'green';
+    if (ratio >= 0.9)  return 'amber';
+    return 'red';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TAB SWITCHING
+// ─────────────────────────────────────────────────────────────────────────────
+
+function switchTab(name, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+    ({ dashboard: renderDashboard, contacts: renderContacts, cc: renderCC, data: renderSnapHistory, settings: renderSettings })[name]?.();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DASHBOARD
+// ─────────────────────────────────────────────────────────────────────────────
+
+function renderDashboard() {
+    const data = load();
+    const snap = latestSnap(data);
+    const kpis = calcKPIs(data);
+
+    // Banner
+    const banner = document.getElementById('snapshotBanner');
+    banner.innerHTML = snap
+        ? `Last updated: <strong>${fmt(snap.date)}</strong>${snap.notes ? ' — ' + snap.notes : ''}. <a href="#" onclick="document.querySelector('.tab-btn:nth-child(4)').click();return false;" style="color:var(--primary);">Update →</a>`
+        : `No data yet — tap <strong>Season Data</strong> to log your first snapshot.`;
+
+    // KPI cards
+    const KPI_ORDER = ['retention','recruitment','vp_rate','missed_calls','intake','cc_op','cc_vis'];
+    document.getElementById('kpiGrid').innerHTML = KPI_ORDER.map(k => {
+        const kpi = kpis[k];
+        const color = rag(kpi);
+        const display = kpi.value !== null && kpi.value !== undefined ? kpi.fmt(kpi.value) : '–';
+        return `<div class="kpi-card ${color}">
+            <div class="kpi-label">${kpi.label}</div>
+            <div class="kpi-value">${display}</div>
+            <div class="kpi-target">${kpi.targetStr}</div>
+        </div>`;
+    }).join('');
+
+    // Follow-ups due
+    const now = isoToday();
+    const pending = data.contacts
+        .filter(c => c.follow_up_date && !c.follow_up_done && c.follow_up_date <= now)
+        .sort((a, b) => a.follow_up_date.localeCompare(b.follow_up_date));
+
+    const fuEl = document.getElementById('followUpList');
+    fuEl.innerHTML = pending.length === 0
+        ? '<span style="color:var(--muted);font-size:0.82rem;">No follow-ups pending.</span>'
+        : pending.map(c => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
+                <div>
+                    <strong>${c.member_ref}</strong>
+                    <span class="tag tag-${c.kpi_category}" style="margin-left:5px;">${c.kpi_category}</span>
+                    <div style="font-size:0.72rem;color:var(--warning);">Due: ${fmt(c.follow_up_date)}</div>
+                    ${c.notes ? `<div style="font-size:0.72rem;color:#94a3b8;">${c.notes}</div>` : ''}
+                </div>
+                <button class="btn-small" onclick="doneFollowUp('${c.id}');renderDashboard()">✓ Done</button>
+            </div>`).join('');
+
+    // Recent contacts
+    const recent = [...data.contacts].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+    const raEl = document.getElementById('recentActivity');
+    raEl.innerHTML = recent.length === 0
+        ? '<span style="color:var(--muted);font-size:0.82rem;">No contacts logged yet.</span>'
+        : recent.map(c => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);">
+                <div>
+                    <strong style="font-size:0.88rem;">${c.member_ref}</strong>
+                    <span class="tag tag-${c.kpi_category}" style="margin-left:5px;">${c.kpi_category}</span>
+                    <span class="outcome-${c.outcome}" style="margin-left:5px;">${outcomeLabel(c.kpi_category, c.outcome)}</span>
+                </div>
+                <span style="font-size:0.72rem;color:var(--muted);white-space:nowrap;margin-left:6px;">${fmt(c.date)}</span>
+            </div>`).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONTACTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+function renderContacts() {
+    const data = load();
+    const cat  = document.getElementById('filterCat').value;
+    const out  = document.getElementById('filterOut').value;
+
+    let list = [...data.contacts].sort((a, b) => b.date.localeCompare(a.date));
+    if (cat) list = list.filter(c => c.kpi_category === cat);
+    if (out) list = list.filter(c => c.outcome === out);
+
+    const el = document.getElementById('contactsList');
+    if (!list.length) {
+        el.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:24px;">No contacts yet.</div>';
+        return;
+    }
+
+    el.innerHTML = list.map(c => {
+        const fu = c.follow_up_date && !c.follow_up_done
+            ? `<div class="follow-up-badge">Follow-up: ${fmt(c.follow_up_date)}</div>`
+            : c.follow_up_date && c.follow_up_done
+                ? `<div style="font-size:0.68rem;color:var(--muted);text-decoration:line-through;">Follow-up ${fmt(c.follow_up_date)} ✓</div>`
+                : '';
+        return `<div class="log-item">
+            <div class="log-item-header">
+                <span class="log-item-ref">${c.member_ref}</span>
+                <span class="log-item-date">${fmt(c.date)}</span>
+            </div>
+            <div class="log-item-meta">
+                <span class="tag tag-${c.kpi_category}">${c.kpi_category}</span>
+                <span class="tag" style="background:rgba(100,116,139,0.2);color:#94a3b8;">${c.method}</span>
+                <span class="outcome-${c.outcome}">${outcomeLabel(c.kpi_category, c.outcome)}</span>
+            </div>
+            ${c.notes ? `<div class="log-notes">${c.notes}</div>` : ''}
+            ${fu}
+            <div style="display:flex;gap:6px;margin-top:7px;">
+                <button class="btn-small" onclick="openContactModal('${c.id}')">Edit</button>
+                <button class="btn-danger" onclick="deleteContact('${c.id}')">Delete</button>
+                ${c.follow_up_date && !c.follow_up_done
+                    ? `<button class="btn-small" style="color:var(--success);border-color:var(--success);" onclick="doneFollowUp('${c.id}');renderContacts()">✓ Done</button>`
+                    : ''}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function openContactModal(id = null) {
+    document.getElementById('edit_contact_id').value = '';
+    document.getElementById('c_date').value = isoToday();
+    document.getElementById('c_ref').value = '';
+    document.getElementById('c_category').value = 'retention';
+    document.getElementById('c_method').value = 'call';
+    document.getElementById('c_notes').value = '';
+    document.getElementById('c_followup').value = '';
+    document.getElementById('contactModalTitle').textContent = id ? 'Edit Contact' : 'Log Member Contact';
+    refreshOutcomeOptions();
+
+    if (id) {
+        const c = load().contacts.find(x => x.id === id);
+        if (c) {
+            document.getElementById('edit_contact_id').value = c.id;
+            document.getElementById('c_date').value = c.date;
+            document.getElementById('c_ref').value = c.member_ref;
+            document.getElementById('c_category').value = c.kpi_category;
+            refreshOutcomeOptions();
+            document.getElementById('c_method').value = c.method;
+            document.getElementById('c_outcome').value = c.outcome;
+            document.getElementById('c_notes').value = c.notes || '';
+            document.getElementById('c_followup').value = c.follow_up_date || '';
+        }
+    }
+
+    document.getElementById('contactModal').classList.add('open');
+}
+
+function closeContactModal() { document.getElementById('contactModal').classList.remove('open'); }
+
+function saveContact() {
+    const ref = document.getElementById('c_ref').value.trim();
+    if (!ref) { alert('Please enter a member reference.'); return; }
+
+    const data  = load();
+    const editId = document.getElementById('edit_contact_id').value;
+    const contact = {
+        id:           editId || uid(),
+        date:         document.getElementById('c_date').value || isoToday(),
+        member_ref:   ref,
+        kpi_category: document.getElementById('c_category').value,
+        method:       document.getElementById('c_method').value,
+        outcome:      document.getElementById('c_outcome').value,
+        notes:        document.getElementById('c_notes').value.trim(),
+        follow_up_date: document.getElementById('c_followup').value || '',
+        follow_up_done: false
+    };
+
+    if (editId) {
+        const idx = data.contacts.findIndex(c => c.id === editId);
+        if (idx !== -1) {
+            contact.follow_up_done = data.contacts[idx].follow_up_done;
+            data.contacts[idx] = contact;
+        }
+    } else {
+        data.contacts.push(contact);
+    }
+
+    save(data);
+    closeContactModal();
+    renderContacts();
+}
+
+function deleteContact(id) {
+    if (!confirm('Delete this contact log entry?')) return;
+    const data = load();
+    data.contacts = data.contacts.filter(c => c.id !== id);
+    save(data);
+    renderContacts();
+}
+
+function doneFollowUp(id) {
+    const data = load();
+    const c = data.contacts.find(x => x.id === id);
+    if (c) { c.follow_up_done = true; save(data); }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CC VISITS
+// ─────────────────────────────────────────────────────────────────────────────
+
+function renderCC() {
+    const data = load();
+    const kpis = calcKPIs(data);
+    const cop  = kpis.cc_op;
+    const cvis = kpis.cc_vis;
+    const t    = data.targets;
+
+    document.getElementById('ccKpiGrid').innerHTML = `
+        <div class="kpi-card ${rag(cop)}">
+            <div class="kpi-label">Operational CCs</div>
+            <div class="kpi-value">${cop.value !== null ? cop.value : '–'}</div>
+            <div class="kpi-target">Target ≥${t.cc_min_operational}</div>
+        </div>
+        <div class="kpi-card ${rag(cvis)}">
+            <div class="kpi-label">Visited &amp; Documented</div>
+            <div class="kpi-value">${cvis.value !== null ? fmtVal(cvis.value, 0) + '%' : '–'}</div>
+            <div class="kpi-target">Target ${t.cc_visited_pct}% (${t.cc_total_in_catchment} CCs)</div>
+        </div>`;
+
+    // Group by CC name, newest first within each
+    const byCC = {};
+    [...data.cc_visits].sort((a, b) => b.date.localeCompare(a.date)).forEach(v => {
+        if (!byCC[v.cc_name]) byCC[v.cc_name] = [];
+        byCC[v.cc_name].push(v);
+    });
+
+    const el = document.getElementById('ccList');
+    const names = Object.keys(byCC);
+    if (!names.length) {
+        el.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:24px;">No CC visits logged yet.</div>';
+        return;
+    }
+
+    el.innerHTML = names.map(name => {
+        const visits  = byCC[name];
+        const latest  = visits[0];
+        const isOp    = latest.operational === true  || latest.operational  === 'true';
+        const hasDocs = visits.some(v => v.documented === true || v.documented === 'true');
+
+        return `<div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px;">
+                <div>
+                    <span class="cc-dot ${isOp ? 'op' : 'nop'}"></span>
+                    <strong>${name}</strong>
+                    ${hasDocs
+                        ? '<span style="font-size:0.68rem;color:var(--success);margin-left:7px;">✓ Documented</span>'
+                        : '<span style="font-size:0.68rem;color:var(--warning);margin-left:7px;">⚠ Not documented</span>'}
+                </div>
+                <span style="font-size:0.72rem;color:var(--muted);">${visits.length} visit${visits.length !== 1 ? 's' : ''}</span>
+            </div>
+            ${visits.map(v => {
+                const op2  = v.operational === true  || v.operational  === 'true';
+                const doc2 = v.documented  === true  || v.documented   === 'true';
+                return `<div style="font-size:0.78rem;padding:5px 0;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;">
+                    <div>
+                        <span style="color:${op2 ? 'var(--success)' : 'var(--danger)'};">${op2 ? '● Operational' : '● Not operational'}</span>
+                        ${doc2 ? '<span style="color:var(--success);margin-left:7px;">✓ Docs</span>' : ''}
+                        ${v.notes ? `<div style="color:#94a3b8;margin-top:2px;">${v.notes}</div>` : ''}
+                    </div>
+                    <div style="text-align:right;white-space:nowrap;margin-left:8px;">
+                        <div>${fmt(v.date)}</div>
+                        <button class="btn-danger" style="margin-top:4px;" onclick="deleteCCVisit('${v.id}')">Del</button>
+                    </div>
+                </div>`;
+            }).join('')}
+        </div>`;
+    }).join('');
+}
+
+function openCCModal() {
+    document.getElementById('cc_date').value = isoToday();
+    document.getElementById('cc_name').value = '';
+    document.getElementById('cc_operational').value = 'true';
+    document.getElementById('cc_documented').value = 'true';
+    document.getElementById('cc_notes').value = '';
+    document.getElementById('edit_cc_id').value = '';
+    document.getElementById('ccModal').classList.add('open');
+}
+
+function closeCCModal() { document.getElementById('ccModal').classList.remove('open'); }
+
+function saveCCVisit() {
+    const name = document.getElementById('cc_name').value.trim();
+    if (!name) { alert('Please enter a CC name.'); return; }
+
+    const data = load();
+    data.cc_visits.push({
+        id:          uid(),
+        date:        document.getElementById('cc_date').value || isoToday(),
+        cc_name:     name,
+        operational: document.getElementById('cc_operational').value === 'true',
+        documented:  document.getElementById('cc_documented').value === 'true',
+        notes:       document.getElementById('cc_notes').value.trim()
+    });
+    save(data);
+    closeCCModal();
+    renderCC();
+}
+
+function deleteCCVisit(id) {
+    if (!confirm('Delete this CC visit record?')) return;
+    const data = load();
+    data.cc_visits = data.cc_visits.filter(v => v.id !== id);
+    save(data);
+    renderCC();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SEASON DATA / SNAPSHOTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+function saveSnapshot() {
+    const data = load();
+    const snap = {
+        id:               uid(),
+        date:             document.getElementById('snap_date').value || isoToday(),
+        members_last_year: +document.getElementById('snap_last_year').value || 0,
+        members_retained:  +document.getElementById('snap_retained').value  || 0,
+        members_new:       +document.getElementById('snap_new').value        || 0,
+        members_returning: +document.getElementById('snap_returning').value  || 0,
+        vp_kg:             +document.getElementById('snap_vp_kg').value      || 0,
+        total_kg:          +document.getElementById('snap_total_kg').value   || 0,
+        missed_calls:      +document.getElementById('snap_missed').value     || 0,
+        total_calls:       +document.getElementById('snap_total_calls').value|| 0,
+        intake_kg:         +document.getElementById('snap_intake_kg').value  || 0,
+        notes:             document.getElementById('snap_notes').value.trim()
+    };
+
+    data.snapshots.push(snap);
+    save(data);
+
+    ['snap_date','snap_last_year','snap_retained','snap_new','snap_returning',
+     'snap_vp_kg','snap_total_kg','snap_missed','snap_total_calls','snap_intake_kg','snap_notes']
+        .forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('snap_date').value = isoToday();
+
+    renderSnapHistory();
+    alert('Snapshot saved!');
+}
+
+function renderSnapHistory() {
+    if (!document.getElementById('snap_date').value) {
+        document.getElementById('snap_date').value = isoToday();
+    }
+    const data  = load();
+    const snaps = [...data.snapshots].sort((a, b) => b.date.localeCompare(a.date));
+    const el    = document.getElementById('snapshotHistory');
+
+    if (!snaps.length) {
+        el.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:24px;">No snapshots saved yet.</div>';
+        return;
+    }
+
+    el.innerHTML = snaps.map(s => {
+        const ret = pct(s.members_retained, s.members_last_year);
+        const rec = pct(+s.members_new + +s.members_returning, s.members_last_year);
+        const vp  = pct(s.vp_kg, s.total_kg);
+        const mc  = pct(s.missed_calls, s.total_calls);
+
+        return `<div class="card">
+            <div style="display:flex;justify-content:space-between;margin-bottom:7px;">
+                <strong>${fmt(s.date)}</strong>
+                <button class="btn-danger" onclick="deleteSnap('${s.id}')">Delete</button>
+            </div>
+            ${s.notes ? `<div style="font-size:0.78rem;color:#94a3b8;margin-bottom:7px;">${s.notes}</div>` : ''}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:0.78rem;">
+                <div><span style="color:#94a3b8;">Retention:</span> ${ret !== null ? fmtVal(ret)+'%' : '–'}</div>
+                <div><span style="color:#94a3b8;">Recruitment:</span> ${rec !== null ? fmtVal(rec)+'%' : '–'}</div>
+                <div><span style="color:#94a3b8;">VP Rate:</span> ${vp !== null ? fmtVal(vp)+'%' : '–'}</div>
+                <div><span style="color:#94a3b8;">Missed Calls:</span> ${mc !== null ? fmtVal(mc)+'%' : '–'}</div>
+                <div><span style="color:#94a3b8;">Intake:</span> ${fmtKg(s.intake_kg)}kg</div>
+                <div><span style="color:#94a3b8;">Base members:</span> ${s.members_last_year || '–'}</div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function deleteSnap(id) {
+    if (!confirm('Delete this snapshot?')) return;
+    const data = load();
+    data.snapshots = data.snapshots.filter(s => s.id !== id);
+    save(data);
+    renderSnapHistory();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SETTINGS
+// ─────────────────────────────────────────────────────────────────────────────
+
+function renderSettings() {
+    const t = load().targets;
+    document.getElementById('tgt_retention').value  = t.retention_pct;
+    document.getElementById('tgt_recruitment').value = t.recruitment_pct;
+    document.getElementById('tgt_vp').value          = t.vp_rate_pct;
+    document.getElementById('tgt_missed').value      = t.missed_calls_max_pct;
+    document.getElementById('tgt_intake').value      = t.intake_kg;
+    document.getElementById('tgt_cc_min').value      = t.cc_min_operational;
+    document.getElementById('tgt_cc_visited').value  = t.cc_visited_pct;
+    document.getElementById('tgt_cc_total').value    = t.cc_total_in_catchment;
+}
+
+function saveTargets() {
+    const data = load();
+    data.targets = {
+        ...data.targets,
+        retention_pct:        +document.getElementById('tgt_retention').value,
+        recruitment_pct:      +document.getElementById('tgt_recruitment').value,
+        vp_rate_pct:          +document.getElementById('tgt_vp').value,
+        missed_calls_max_pct: +document.getElementById('tgt_missed').value,
+        intake_kg:            +document.getElementById('tgt_intake').value,
+        cc_min_operational:   +document.getElementById('tgt_cc_min').value,
+        cc_visited_pct:       +document.getElementById('tgt_cc_visited').value,
+        cc_total_in_catchment:+document.getElementById('tgt_cc_total').value
+    };
+    save(data);
+    alert('Targets saved!');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EXPORT / IMPORT
+// ─────────────────────────────────────────────────────────────────────────────
+
+function dl(content, filename, type) {
+    const blob = new Blob([content], { type });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function exportJSON() {
+    dl(JSON.stringify(load(), null, 2), `bromyard-kpi-${isoToday()}.json`, 'application/json');
+}
+
+function exportCSV() {
+    const data = load();
+    const rows = [['Date','Member Ref','KPI Category','Method','Outcome','Notes','Follow-up Date','Follow-up Done']];
+    data.contacts.forEach(c => rows.push([
+        fmt(c.date), c.member_ref, c.kpi_category, c.method,
+        outcomeLabel(c.kpi_category, c.outcome),
+        `"${(c.notes || '').replace(/"/g,'""')}"`,
+        fmt(c.follow_up_date), c.follow_up_done ? 'Yes' : 'No'
+    ]));
+    dl(rows.map(r => r.join(',')).join('\n'), `bromyard-contacts-${isoToday()}.csv`, 'text/csv');
+}
+
+function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const d = JSON.parse(e.target.result);
+            if (!confirm('Replace all current KPI data with this backup?')) return;
+            save(d);
+            alert('Imported successfully!');
+            renderDashboard();
+        } catch (err) { alert('Invalid file: ' + err.message); }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
+
+function clearAll() {
+    if (!confirm('Clear ALL KPI tracker data? This cannot be undone.')) return;
+    if (!confirm('Final confirmation — delete everything?')) return;
+    localStorage.removeItem(STORE);
+    renderDashboard();
+    alert('All data cleared.');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+
+document.getElementById('snap_date').value = isoToday();
+refreshOutcomeOptions();
+renderDashboard();
+</script>
+</body>
+</html>
